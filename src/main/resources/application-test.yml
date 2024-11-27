@@ -1,0 +1,58 @@
+server:
+  port: 8092
+spring:
+  data:
+    redis:
+      port: 6379
+      host: localhost
+      database: 2
+      connect-timeout: 5000
+  #    password: Nulink@2023Redis
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    type: com.zaxxer.hikari.HikariDataSource
+    #url: jdbc:mysql://127.0.0.1:3306/nulink_dashboard?useUnicode=true&characterEncoding=utf-8&zeroDateTimeBehavior=convertToNull&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+    url: jdbc:mysql://127.0.0.1:3306/taibiex_staking?useUnicode=true&characterEncoding=utf-8&zeroDateTimeBehavior=convertToNull&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+    username: root
+    password: 123456
+    hikari:
+      minimum-idle: 5
+      idle-timeout: 600000
+      maximum-pool-size: 100
+      auto-commit: true
+      pool-name: XCarHikariCP
+      max-lifetime: 3600000
+      connection-timeout: 60000
+      connection-test-query: SELECT 1
+      transaction:
+        rollback-on-commit-failure: true
+      leak-detection-threshold: 3500000
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    open-in-view: false
+
+contracts:
+  start: 1
+  step: 10
+  enabled: true
+  contractList:
+    - name: "v3CoreFactoryAddress"
+      address: "0x1714F3f9d1fbC311422d700602483817F48Cca5F"
+      enabled: true
+
+web3j:
+  client-address: https://rpc.testnetv2.tabichain.com
+  admin-client: true # to manage accounts, enable the admin client
+  httpTimeoutSeconds: 35
+
+knife4j:
+  enable: true
+  setting:
+    language: en
+
+tabi:
+  password: guokaipeng123
+  chainId: 9788
