@@ -27,7 +27,7 @@ public class PoolCreatedService {
         if (p != null) {
             return;
         }
-        PoolMapSingleton.put(poolCreated.getPool(), poolCreated);
+        //PoolMapSingleton.put(poolCreated.getPool(), poolCreated);
         poolCreatedRepository.save(poolCreated);
     }
 }

@@ -56,3 +56,7 @@ knife4j:
 tabi:
   password: guokaipeng123
   chainId: 9788
+
+epoch:
+  startTimestamp: 1731687826251 # epoch 周期起始时间(块号对应的时间戳：我们这里用毫秒级时间戳)
+  unit: 86400000 # 一个epoch时长： 1天，单位毫秒

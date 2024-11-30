@@ -1,6 +1,7 @@
 package com.taibiex.stakingservice.config;
 
 import lombok.Data;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.util.ObjectUtils;
@@ -76,6 +77,6 @@ public class ContractsConfig {
 
 
     public List<String> getEnabledContractAddresses() {
-        return contractList.stream().filter(ContractInfo::getEnabled).map(ContractInfo::getAddress).map(String::toLowerCase).collect(Collectors.toList());
+        return contractList.stream().filter(ct -> ct.getEnabled() && StringUtils.isNotBlank(ct.getAddress())).map(ContractInfo::getAddress).map(String::toLowerCase).collect(Collectors.toList());
     }
 }

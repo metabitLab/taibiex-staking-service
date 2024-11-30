@@ -8,6 +8,8 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.math.BigInteger;
+
 @Entity
 @Table(name = "swap", indexes = {
         @Index(name = "sender_idx", columnList = "sender"),
@@ -19,27 +21,27 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class Swap extends BaseEntity{
 
-    @Column(name = "tx_hash")
+    @Column(name = "tx_hash", nullable = false, length = 100)
     private String txHash;
 
-    @Column(name = "sender")
+    @Column(name = "sender", nullable = false, length = 100)
     private String sender;
 
-    @Column(name = "recipient")
+    @Column(name = "recipient", nullable = false, length = 100)
     private String recipient;
 
-    @Column(name = "amount0")
+    @Column(name = "amount0", nullable = false, length = 100)
     private String amount0;
 
-    @Column(name = "amount1")
+    @Column(name = "amount1", nullable = false, length = 100)
     private String amount1;
 
-    @Column(name = "sqrt_price_x96")
+    @Column(name = "sqrt_price_x96", nullable = false)
     private String sqrtPriceX96;
 
-    @Column(name = "liquidity")
+    @Column(name = "liquidity", nullable = false, length = 100)
     private String liquidity;
 
-    @Column(name = "tick")
+    @Column(name = "tick", nullable = false)
     private String tick;
 }

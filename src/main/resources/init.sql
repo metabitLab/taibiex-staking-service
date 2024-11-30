@@ -8,3 +8,5 @@ SET time_zone = '+0:00';
 flush privileges;
 
 CREATE DATABASE IF NOT EXISTS `taibiex_staking`;
+
+

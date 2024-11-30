@@ -28,6 +28,9 @@ spring:
         rollback-on-commit-failure: true
       leak-detection-threshold: 3500000
 
+# Caused by: org.hibernate.service.spi.ServiceException: Unable to create requested service [org.hibernate.engine.jdbc.env.spi.JdbcEnvironment] due to: Unable to determine Dialect without JDBC metadata (please set 'jakarta.persistence.jdbc.url' for common cases or 'hibernate.dialect' when a custom Dialect implementation must be provided)
+# 注意报如上错误，需要先建数据库就没问题了
+
   jpa:
     hibernate:
       ddl-auto: update
@@ -41,6 +44,9 @@ contracts:
   contractList:
     - name: "v3CoreFactoryAddress"
       address: "0x1714F3f9d1fbC311422d700602483817F48Cca5F"
+      enabled: true
+    - name: "NonfungiblePositionManager"
+      address: "0xd8442B36A021Ec592638C8B3529E492c5f6799B9"
       enabled: true
 
 web3j:
@@ -56,3 +62,8 @@ knife4j:
 tabi:
   password: guokaipeng123
   chainId: 9788
+
+epoch:
+  startTimestamp: 1731687826251 # epoch 周期起始时间(块号对应的时间戳：我们这里用毫秒级时间戳)
+  unit: 86400000 # 一个epoch时长： 1天，单位毫秒
+

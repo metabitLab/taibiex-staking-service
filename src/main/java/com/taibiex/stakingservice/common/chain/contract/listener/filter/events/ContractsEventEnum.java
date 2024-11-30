@@ -11,6 +11,18 @@ public enum ContractsEventEnum {
 
     MINT_DESC,
 
+    BURN,
+
+    BURN_DESC,
+
+    INCREASE_LIQUIDITY,
+
+    INCREASE_LIQUIDITY_DESC,
+
+    DECREASE_LIQUIDITY,
+
+    DECREASE_LIQUIDITY_DESC,
+
     POOL_CREATED,
 
     POOL_CREATED_DESC;

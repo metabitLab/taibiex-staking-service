@@ -20,22 +20,22 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class PoolCreated extends BaseEntity{
 
-    @Column(name = "tx_hash")
+    @Column(name = "tx_hash", nullable = false, length = 100)
     private String txHash;
 
-    @Column(name = "token0")
+    @Column(name = "token0", nullable = false, length = 100)
     private String token0;
 
-    @Column(name = "token1")
+    @Column(name = "token1", nullable = false, length = 100)
     private String token1;
 
-    @Column(name = "fee")
+    @Column(name = "fee", nullable = false, length = 64)
     private String fee;
 
-    @Column(name = "tick_spacing")
+    @Column(name = "tick_spacing", nullable = false, length = 64)
     private String tickSpacing;
 
-    @Column(name = "pool")
+    @Column(name = "pool", nullable = false, length = 100)
     private String pool;
 
 }

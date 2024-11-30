@@ -10,6 +10,7 @@ import com.taibiex.stakingservice.common.constant.PoolMapSingleton;
 import com.taibiex.stakingservice.config.ContractsConfig;
 import com.taibiex.stakingservice.entity.ContractOffset;
 import com.taibiex.stakingservice.entity.PoolCreated;
+import com.taibiex.stakingservice.entity.RewardPool;
 import com.taibiex.stakingservice.service.ContractOffsetService;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
@@ -114,38 +115,55 @@ public class BlockEventListener {
         topicAndContractAddr2EventMap.clear();
         topicAndContractAddr2CallBackMap.clear();
 
-        ContractsConfig.ContractInfo v3CoreFactoryCI = contractsConfig.getContractInfo("v3CoreFactoryAddress");
+//        ContractsConfig.ContractInfo v3CoreFactoryCI = contractsConfig.getContractInfo("v3CoreFactoryAddress");
+//
+//        if (isTaskEnable(enablesTaskNames, disableTaskNames, v3CoreFactoryCI.getName()) && v3CoreFactoryCI.getEnabled()) {
+//
+//            Event claimEvent = new ContractsEventBuilder().build(ContractsEventEnum.POOL_CREATED);
+//            String topicEventClaim = EventEncoder.encode(claimEvent).toLowerCase();
+//            topicAndContractAddr2EventMap.put(topicEventClaim + "_" + v3CoreFactoryCI.getAddress(), claimEvent);
+//            topicAndContractAddr2CallBackMap.put(topicEventClaim + "_" + v3CoreFactoryCI.getAddress(), PoolCreatedEventHandler.class.getMethod("descPoolCreatedEvent", Log.class));
+//        }
 
-        if (isTaskEnable(enablesTaskNames, disableTaskNames, v3CoreFactoryCI.getName()) && v3CoreFactoryCI.getEnabled()) {
 
-            Event claimEvent = new ContractsEventBuilder().build(ContractsEventEnum.POOL_CREATED);
-            String topicEventClaim = EventEncoder.encode(claimEvent).toLowerCase();
-            topicAndContractAddr2EventMap.put(topicEventClaim + "_" + v3CoreFactoryCI.getAddress(), claimEvent);
-            topicAndContractAddr2CallBackMap.put(topicEventClaim + "_" + v3CoreFactoryCI.getAddress(), PoolCreatedEventHandler.class.getMethod("descPoolCreatedEvent", Log.class));
-        }
+        Map<String, RewardPool> sharedMap = PoolMapSingleton.getSharedMap();
+        for (Map.Entry<String, RewardPool> entry : sharedMap.entrySet()) {
 
+            String poolAddress = entry.getKey();
 
-        Map<String, PoolCreated> sharedMap = PoolMapSingleton.getSharedMap();
-        for (Map.Entry<String, PoolCreated> entry : sharedMap.entrySet()) {
-            List<String> enabledContractAddresses = contractsConfig.getEnabledContractAddresses();
-            if (!enabledContractAddresses.contains(entry.getValue().getPool().toLowerCase())) {
-                ContractsConfig.ContractInfo contractInfo = new ContractsConfig.ContractInfo();
-                contractInfo.setAddress(entry.getValue().getPool());
-                contractInfo.setEnabled(true);
-                contractsConfig.getContractList().add(contractInfo);
-            }
-            String key = entry.getKey();
-            Event swapEvent = new ContractsEventBuilder().build(ContractsEventEnum.SWAP);
-            String swapEventTopic = EventEncoder.encode(swapEvent).toLowerCase();
-            topicAndContractAddr2EventMap.put(swapEventTopic + "_" + key, swapEvent);
-            topicAndContractAddr2CallBackMap.put(swapEventTopic + "_" + key, SwapEventHandler.class.getMethod("descSwapEvent", Log.class));
+            Event poolMintEvent = new ContractsEventBuilder().build(ContractsEventEnum.MINT);
+                String poolTopicEventMint = EventEncoder.encode(poolMintEvent).toLowerCase();
+                topicAndContractAddr2EventMap.put(poolTopicEventMint + "_" + poolAddress, poolMintEvent);
+                topicAndContractAddr2CallBackMap.put(poolTopicEventMint + "_" + poolAddress, MintEventHandler.class.getMethod("descPoolMintEvent", Log.class));
 
-            Event unStakeAllEvent = new ContractsEventBuilder().build(ContractsEventEnum.MINT);
-            String topicEventMint = EventEncoder.encode(unStakeAllEvent).toLowerCase();
-            topicAndContractAddr2EventMap.put(topicEventMint + "_" + key, unStakeAllEvent);
-            topicAndContractAddr2CallBackMap.put(topicEventMint + "_" + key, MintEventHandler.class.getMethod("descMintEvent", Log.class));
+            Event poolBurnEvent = new ContractsEventBuilder().build(ContractsEventEnum.MINT);
+            String poolTopicEventBurn = EventEncoder.encode(poolBurnEvent).toLowerCase();
+            topicAndContractAddr2EventMap.put(poolTopicEventBurn + "_" + poolAddress, poolBurnEvent);
+            topicAndContractAddr2CallBackMap.put(poolTopicEventBurn + "_" + poolAddress, MintEventHandler.class.getMethod("descPoolBurnEvent", Log.class));
 
         }
+
+        /**
+         * NonfungiblePositionManager 关联同一交易hash中 Mint和IncreaseLiquidity事件，目前没法通过其他方式关联，只能通过同意交易hash关联起来
+         *
+         * tx_hash -> mint1和IncreaseLiquidity1 -> tokenId ->pool地址 ： 得到最终需要的关联关系： pool地址 -> tokenId 和 mint和IncreaseLiquidity中参数
+         */
+
+        ContractsConfig.ContractInfo nonFungiblePositionManagerCI = contractsConfig.getContractInfo("NonfungiblePositionManager");
+
+        Event nonFungiblePositionManagerDecreaseLiquidityEvent = new ContractsEventBuilder().build(ContractsEventEnum.DECREASE_LIQUIDITY);
+        String nonFungiblePositionManagerTopicEventDecreaseLiquidity = EventEncoder.encode(nonFungiblePositionManagerDecreaseLiquidityEvent).toLowerCase();
+        topicAndContractAddr2EventMap.put(nonFungiblePositionManagerTopicEventDecreaseLiquidity + "_" + nonFungiblePositionManagerCI.getAddress(), nonFungiblePositionManagerDecreaseLiquidityEvent);
+        topicAndContractAddr2CallBackMap.put(nonFungiblePositionManagerTopicEventDecreaseLiquidity + "_" + nonFungiblePositionManagerCI.getAddress(), MintEventHandler.class.getMethod("descDecreaseLiquidityEvent", Log.class));
+
+        Event nonFungiblePositionManagerIncreaseLiquidityEvent = new ContractsEventBuilder().build(ContractsEventEnum.DECREASE_LIQUIDITY);
+        String nonFungiblePositionManagerTopicEventIncreaseLiquidity = EventEncoder.encode(nonFungiblePositionManagerIncreaseLiquidityEvent).toLowerCase();
+        topicAndContractAddr2EventMap.put(nonFungiblePositionManagerTopicEventIncreaseLiquidity + "_" + nonFungiblePositionManagerCI.getAddress(), nonFungiblePositionManagerIncreaseLiquidityEvent);
+        topicAndContractAddr2CallBackMap.put(nonFungiblePositionManagerTopicEventIncreaseLiquidity + "_" + nonFungiblePositionManagerCI.getAddress(), MintEventHandler.class.getMethod("descIncreaseLiquidityEvent", Log.class));
+
+
+
+
     }
 
 

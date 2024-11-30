@@ -1,7 +1,7 @@
 package com.taibiex.stakingservice.common.constant;
 
-import com.taibiex.stakingservice.entity.PoolCreated;
-import com.taibiex.stakingservice.service.PoolCreatedService;
+import com.taibiex.stakingservice.entity.RewardPool;
+import com.taibiex.stakingservice.service.RewardPoolService;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.Resource;
 import org.springframework.stereotype.Component;
@@ -14,11 +14,11 @@ import java.util.concurrent.ConcurrentHashMap;
 public class PoolMapSingleton {
 
     @Resource
-    private PoolCreatedService poolCreatedService;
+    private RewardPoolService rewardPoolService;
 
     private static PoolMapSingleton instance;
 
-    private Map<String, PoolCreated> sharedMap;
+    private Map<String, RewardPool> sharedMap;
 
     public PoolMapSingleton() {
         this.sharedMap = new ConcurrentHashMap<>();
@@ -31,11 +31,11 @@ public class PoolMapSingleton {
         return instance;
     }
 
-    public static void put(String key, PoolCreated value) {
+    public static void put(String key, RewardPool value) {
         PoolMapSingleton.getInstance().sharedMap.put(key, value);
     }
 
-    public static PoolCreated get(String key) {
+    public static RewardPool get(String key) {
         return PoolMapSingleton.getInstance().sharedMap.get(key);
     }
 
@@ -51,13 +51,13 @@ public class PoolMapSingleton {
         PoolMapSingleton.getInstance().sharedMap.clear();
     }
 
-    public static Map<String, PoolCreated> getSharedMap() {
+    public static Map<String, RewardPool> getSharedMap() {
         return PoolMapSingleton.getInstance().sharedMap;
     }
 
     @PostConstruct
     private void initShareMap() {
-        List<PoolCreated> nodePoolEvents = poolCreatedService.findAll();
+        List<RewardPool> nodePoolEvents = rewardPoolService.findAll();
         nodePoolEvents.forEach(nodePoolEvent -> getSharedMap().put(nodePoolEvent.getPool(), nodePoolEvent));
     }
 }
