@@ -74,7 +74,7 @@ public class MintAndIncreaseLiquidity extends BaseEntity{
 
     //IncreaseLiquidity
     //理论上存在这个的原因: 在 Uniswap V3 中，添加流动性确实需要通过 NonfungiblePositionManager 合约，而不能直接通过 Pool 合约的 mint 方法
-    @Comment("添加流动性生成的NFT, 有可能为 空字符串： 通过Pool 添加的流动性时(理论上存在这个)")
+    @Comment("添加流动性生成的NFT,有可能为空字符串:通过Pool添加的流动性时,有可能只有Mint事件")
     @Column(name = "token_id", nullable = false, length = 100)
     private String tokenId;
 

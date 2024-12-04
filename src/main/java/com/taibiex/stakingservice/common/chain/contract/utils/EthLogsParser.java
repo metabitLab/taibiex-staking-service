@@ -21,13 +21,22 @@ import java.util.stream.Collectors;
 public class EthLogsParser {
 
     public static BigInteger hexToBigInteger(String strHex) {
+
         if (strHex.length() > 2) {
+            // 将十六进制字符串转换为 BigInteger
             if (strHex.charAt(0) == '0' && (strHex.charAt(1) == 'X' || strHex.charAt(1) == 'x')) {
-                strHex = strHex.substring(2);
+                strHex = strHex.substring(2); // 去掉前缀 "0x"
             }
             BigInteger bigInteger = new BigInteger(strHex, 16);
+
+            // 处理负数（如果需要）
+            if (bigInteger.testBit(255)) { // 检查最高位（符号位）
+                bigInteger = bigInteger.subtract(BigInteger.ONE.shiftLeft(256)); // 将其转换为负数
+            }
+
             return bigInteger;
         }
+
         return null;
     }
 

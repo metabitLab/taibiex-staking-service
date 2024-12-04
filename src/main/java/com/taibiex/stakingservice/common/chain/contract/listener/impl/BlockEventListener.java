@@ -13,6 +13,7 @@ import com.taibiex.stakingservice.entity.PoolCreated;
 import com.taibiex.stakingservice.entity.RewardPool;
 import com.taibiex.stakingservice.service.ContractOffsetService;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,6 +25,7 @@ import org.springframework.util.ObjectUtils;
 import org.springframework.validation.BindException;
 import org.web3j.abi.EventEncoder;
 import org.web3j.abi.datatypes.Event;
+import org.web3j.crypto.Keys;
 import org.web3j.protocol.core.methods.response.EthLog;
 import org.web3j.protocol.core.methods.response.Log;
 
@@ -136,16 +138,30 @@ public class BlockEventListener {
 
             String poolAddress = entry.getKey();
 
+            if(StringUtils.isEmpty(poolAddress) || StringUtils.isBlank(poolAddress))
+            {
+                continue;
+            }
+
+            poolAddress = poolAddress.toLowerCase();
+
             Event poolMintEvent = new ContractsEventBuilder().build(ContractsEventEnum.MINT);
                 String poolTopicEventMint = EventEncoder.encode(poolMintEvent).toLowerCase();
                 topicAndContractAddr2EventMap.put(poolTopicEventMint + "_" + poolAddress, poolMintEvent);
                 topicAndContractAddr2CallBackMap.put(poolTopicEventMint + "_" + poolAddress, MintEventHandler.class.getMethod("descPoolMintEvent", Log.class));
 
-            Event poolBurnEvent = new ContractsEventBuilder().build(ContractsEventEnum.MINT);
+            Event poolBurnEvent = new ContractsEventBuilder().build(ContractsEventEnum.BURN);
             String poolTopicEventBurn = EventEncoder.encode(poolBurnEvent).toLowerCase();
             topicAndContractAddr2EventMap.put(poolTopicEventBurn + "_" + poolAddress, poolBurnEvent);
             topicAndContractAddr2CallBackMap.put(poolTopicEventBurn + "_" + poolAddress, MintEventHandler.class.getMethod("descPoolBurnEvent", Log.class));
 
+            ContractsConfig.ContractInfo contractInfo = new ContractsConfig.ContractInfo();
+            contractInfo.setName("pool" + poolAddress);
+            contractInfo.setEnabled(true);
+            contractInfo.setAddress(poolAddress);
+
+            //动态增加从数据库中获取的合约地址来扫描
+            contractsConfig.addContractAddress(contractInfo);
         }
 
         /**

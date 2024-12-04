@@ -346,10 +346,27 @@ public class Web3jUtils {
         String fromAddress = credentials.getAddress();
 
         String encodedFunction = FunctionEncoder.encode(function);
-        /*org.web3j.protocol.core.methods.response.EthCall*/
-        EthCall response = web3j.ethCall(Transaction.createEthCallTransaction(fromAddress, contractAddress, encodedFunction), DefaultBlockParameterName.LATEST).sendAsync().get();
+        int m = 0, retryTimes = 20;
+        while (m < retryTimes) {
+            // use credentials get error: Empty value (0x) returned from contract web3j
 
-        return FunctionReturnDecoder.decode(response.getValue(), function.getOutputParameters());
+            try {
+                /*org.web3j.protocol.core.methods.response.EthCall*/
+                EthCall response = web3j.ethCall(Transaction.createEthCallTransaction(fromAddress, contractAddress, encodedFunction), DefaultBlockParameterName.LATEST).sendAsync().get();
+
+                return FunctionReturnDecoder.decode(response.getValue(), function.getOutputParameters());
+            } catch (Exception e) {
+                m++;
+                if (m < retryTimes) {
+                    log.error("callContractFunction 错误：",  e);
+                }
+                else{
+                    throw e;
+                }
+            }
+        }
+        return null;
+
     }
 
 
@@ -580,25 +597,35 @@ public class Web3jUtils {
 
         String poolAddress = CalculatePoolAddress.getPoolAddress(POOL_INIT_CODE_HASH,factoryAddress,token0,token1,BigInteger.valueOf(fee) );
 
-        return poolAddress;
+        return Keys.toChecksumAddress(poolAddress);
     }
 
 
-    public String getNftOwnerOf(String contractAddress, String tokenId)  {
+    public String getNftOwnerOf(String contractAddress, String tokenId) throws Exception {
 
         // https://stackoverflow.com/questions/52028956/web3j-java-function-call-returns-empty-list-on-solidity-contract
         TransactionManager manager = new ReadonlyTransactionManager(web3j, "0xA81C479AB649D8de1d07bAD978301aFaD2890608");
-        // use credentials get error: Empty value (0x) returned from contract web3j
-        ERC721 contract = ERC721.load(contractAddress, this.web3j, manager/*Web3jUtils.credentials*/, new DefaultGasProvider());
-        try {
-            String owner = contract.ownerOf(new BigInteger(tokenId)).send();
-            return owner;
+        ERC721 contract = ERC721.load(Keys.toChecksumAddress(contractAddress), this.web3j, manager/*Web3jUtils.credentials*/, new DefaultGasProvider());
+
+        int m = 0, retryTimes = 20;
+        while (m < retryTimes) {
+            // use credentials get error: Empty value (0x) returned from contract web3j
+
+            try {
+                String owner = contract.ownerOf(new BigInteger(tokenId)).send();
+                return owner;
+            } catch (Exception e) {
+                m++;
+                if (m < retryTimes) {
+                    log.error("获取Pool价格区间对应对应的NFT token: {} 对应的 owner 错误, 合约地址：{}, 错误：{}", tokenId, contractAddress, e);
+                }
+                else{
+                   throw e;
+                }
+            }
         }
-        catch (Exception e)
-        {
-            log.error("获取Pool价格区间对应对应的NFT token: {} 对应的 owner 错误, 合约地址：{}, 错误：{}", tokenId, contractAddress, e);
-            return null;
-        }
+
+        return null;
     }
 
     /**

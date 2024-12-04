@@ -154,6 +154,7 @@ public class ContractsEventBuilder implements EventBuilder<ContractsEventEnum> {
     }
 
     private Event getBurnEventDesc() {
+        //Burn(address indexed owner, int24 indexed tickLower, int24 indexed tickUpper, uint128 amount, uint256 amount0, uint256 amount1)
         Event event = new Event("Burn",
                 Arrays.<TypeReference<?>>asList(
                         new TypeReference<Uint128>(false) { //amount

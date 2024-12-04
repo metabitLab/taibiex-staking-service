@@ -52,7 +52,7 @@ public class ContractsConfig {
 
     private Map<String, ContractInfo> mapProps = null;
 
-    public Map<String, ContractInfo> getContractInfoMap() {
+    public synchronized Map<String, ContractInfo> getContractInfoMap() {
 
         if (ObjectUtils.isEmpty(mapProps)) {
 
@@ -71,12 +71,55 @@ public class ContractsConfig {
         return contractInfoMap.get(contractName.toLowerCase());
     }
 
-    public List<String> getContractAddresses() {
+    public synchronized List<String> getContractAddresses() {
         return contractList.stream().map(ContractInfo::getAddress).map(String::toLowerCase).collect(Collectors.toList());
     }
 
 
-    public List<String> getEnabledContractAddresses() {
+    public synchronized List<String> getEnabledContractAddresses() {
         return contractList.stream().filter(ct -> ct.getEnabled() && StringUtils.isNotBlank(ct.getAddress())).map(ContractInfo::getAddress).map(String::toLowerCase).collect(Collectors.toList());
+    }
+
+    /**
+     * 动态增加从数据库中获取的合约地址来扫描
+     * @param contractInfos
+     */
+    public synchronized void addContractAddresses(List<ContractInfo> contractInfos)
+    {
+
+        // 将 List 的值转换为 Map
+        Map<String, ContractInfo> contractInfoMap = contractList.stream()
+                .collect(Collectors.toMap(ContractInfo::getAddress, contractInfo1 -> contractInfo1));
+
+        for (ContractInfo contractInfo: contractInfos)
+        {
+            contractInfoMap.put(contractInfo.getAddress(), contractInfo);
+        }
+
+        // 将 Map 的值转换为 List
+        List<ContractInfo> newContractList = new ArrayList<>(contractInfoMap.values());
+
+        contractList = newContractList;
+
+    }
+
+    /**
+     * 动态增加从数据库中获取的合约地址来扫描
+     * @param contractInfo
+     */
+    public synchronized void addContractAddress(ContractInfo contractInfo)
+    {
+        // 将 List 的值转换为 Map
+        Map<String, ContractInfo> contractInfoMap = contractList.stream()
+                .collect(Collectors.toMap(ContractInfo::getAddress, contractInfo1 -> contractInfo1));
+
+        contractInfoMap.put(contractInfo.getAddress(), contractInfo);
+
+
+        // 将 Map 的值转换为 List
+        List<ContractInfo> newContractList = new ArrayList<>(contractInfoMap.values());
+
+        contractList = newContractList;
+
     }
 }

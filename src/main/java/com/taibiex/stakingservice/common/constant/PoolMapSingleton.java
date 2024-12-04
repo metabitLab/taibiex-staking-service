@@ -58,6 +58,7 @@ public class PoolMapSingleton {
     @PostConstruct
     private void initShareMap() {
         List<RewardPool> nodePoolEvents = rewardPoolService.findAll();
+
         nodePoolEvents.forEach(nodePoolEvent -> getSharedMap().put(nodePoolEvent.getPool(), nodePoolEvent));
     }
 }

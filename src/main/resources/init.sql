@@ -10,3 +10,5 @@ flush privileges;
 CREATE DATABASE IF NOT EXISTS `taibiex_staking`;
 
 
+INSERT INTO taibiex_staking.reward_pools_config (create_time,last_update_time,fee,pool,token0,token1) VALUES
+    ('2024-12-04 23:22:42','2024-12-04 23:22:42','100','0x497244841295B8941086D2271bB3a5bB1e8277B4','0x2ccad515c13df2178f6960304ae0dbe0428e8d28','0xcdc10593a66185aaa206665c5083ac51ad935f91');
