@@ -43,7 +43,7 @@ public class MintAndIncreaseLiquidity extends BaseEntity{
     @Column(name = "tick_upper", nullable = false, length = 64)
     private String tickUpper;
 
-    //TODO: 需要确认 IncreaseLiquidity事件中的liquidity,amount0，amount1与mint事件中的liquidity,amount0，amount1是否一致
+    //IncreaseLiquidity事件中的liquidity,amount0，amount1与mint事件中的liquidity,amount0，amount1一致
     @Column(name = "amount", nullable = false, length = 100)
     private String amount;
 

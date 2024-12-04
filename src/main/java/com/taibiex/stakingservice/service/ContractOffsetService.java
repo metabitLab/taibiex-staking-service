@@ -3,10 +3,12 @@ package com.taibiex.stakingservice.service;
 import com.taibiex.stakingservice.entity.ContractOffset;
 import com.taibiex.stakingservice.repository.ContractOffsetRepository;
 import jakarta.transaction.Transactional;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.math.BigInteger;
 
+@Slf4j
 @Service
 public class ContractOffsetService {
 

@@ -40,7 +40,7 @@ public class SwapEventHandler {
             Swap swap = new Swap();
             String transactionHash = evLog.getTransactionHash();
             Timestamp eventHappenedTimeStamp = web3jUtils.getEventHappenedTimeStampByBlockHash(evLog.getBlockHash());
-            swap.setTxHash(transactionHash + "-" + evLog.getLogIndex());
+            swap.setTxHash(transactionHash /*+ "-" + evLog.getLogIndex()*/);
             swap.setSender(EthLogsParser.hexToAddress(topics.get(1)));
             swap.setRecipient(EthLogsParser.hexToAddress(topics.get(2)));
             swap.setAmount0(args.get(0).getValue().toString());

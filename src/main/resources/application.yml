@@ -6,6 +6,17 @@ spring:
       matching-strategy: ant_path_matcher
   application:
     name: taibiex-staking-service
+  jpa:
+    hibernate:
+      ddl-auto: update
+      format_sql: true # 以便以更易读的格式打印 SQL
+    show-sql: true
+    open-in-view: false
+
+logging:
+  level:
+    org.hibernate.SQL: DEBUG # logging.level.org.hibernate.SQL: 将日志级别设置为 DEBUG，以便打印 SQL 语句
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE # 将日志级别设置为 TRACE，以打印参数绑定的详细信息
 
 # springdoc-openapi项目配置
 springdoc:

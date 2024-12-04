@@ -1,6 +1,7 @@
 package com.taibiex.stakingservice.common.chain.contract.utils;
 
 import com.taibiex.stakingservice.common.chain.contract.listener.filter.Monitor;
+import com.taibiex.stakingservice.common.chain.contract.types.eip721.generated.ERC721;
 import com.taibiex.stakingservice.common.utils.RedisService;
 import com.taibiex.stakingservice.config.ContractsConfig;
 import com.taibiex.stakingservice.config.ProfileConfig;
@@ -19,8 +20,7 @@ import org.web3j.abi.FunctionEncoder;
 import org.web3j.abi.FunctionReturnDecoder;
 import org.web3j.abi.TypeReference;
 import org.web3j.abi.datatypes.*;
-import org.web3j.abi.datatypes.generated.Uint16;
-import org.web3j.abi.datatypes.generated.Uint256;
+import org.web3j.abi.datatypes.generated.*;
 import org.web3j.crypto.*;
 import org.web3j.protocol.Web3j;
 import org.web3j.protocol.core.DefaultBlockParameter;
@@ -29,6 +29,7 @@ import org.web3j.protocol.core.methods.request.Transaction;
 import org.web3j.protocol.core.methods.response.*;
 import org.web3j.protocol.exceptions.TransactionException;
 import org.web3j.protocol.http.HttpService;
+import org.web3j.tx.ReadonlyTransactionManager;
 import org.web3j.tx.TransactionManager;
 import org.web3j.tx.gas.DefaultGasProvider;
 import org.web3j.tx.response.PollingTransactionReceiptProcessor;
@@ -45,6 +46,7 @@ import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
+
 @Slf4j
 @Service
 public class Web3jUtils {
@@ -52,6 +54,9 @@ public class Web3jUtils {
     private static String DEV_PROFILE = "dev";
     private static String TEST_PROFILE = "test";
     private static String PROD_PROFILE = "prod";
+
+    //https://github.com/Uniswap/v3-periphery/blob/0682387198a24c7cd63566a2c58398533860a5d1/contracts/libraries/PoolAddress.sol#L10
+    private static String POOL_INIT_CODE_HASH = "0xe34f199b19b2b4f47f68442619d555527d244f78a3297ea89325f843f87b8b54";
 
     public static Logger logger = LoggerFactory.getLogger(Web3jUtils.class);
 
@@ -498,10 +503,144 @@ public class Web3jUtils {
             return returnList.get(0).getValue().toString();
         } catch (ExecutionException e) {
             // throw new RuntimeException(e);
-            log.error("call getEpochStartTime ExecutionException: {}", e);
+            log.error("call getUserEpochInfo ExecutionException:", e);
         } catch (InterruptedException e) {
             //throw new RuntimeException(e);
-            log.error("call getEpochStartTime InterruptedException: {}", e);
+            log.error("call getUserEpochInfo InterruptedException:", e);
+        }
+        return null;
+    }
+
+
+    /**
+     *   function positions(uint256 tokenId)
+     *         external
+     *         view
+     *         override
+     *         returns (
+     *             uint96 nonce,
+     *             address operator,
+     *             address token0,
+     *             address token1,
+     *             uint24 fee,
+     *             int24 tickLower,
+     *             int24 tickUpper,
+     *             uint128 liquidity,
+     *             uint256 feeGrowthInside0LastX128,
+     *             uint256 feeGrowthInside1LastX128,
+     *             uint128 tokensOwed0,
+     *             uint128 tokensOwed1
+     *         )
+     * @param tokenId
+     * @return
+     */
+    public List<Type> getUniswapV3PoolDetails(String tokenId){
+
+        List<Type> inputParameters = new ArrayList<>();
+        inputParameters.add(new Uint256(Long.parseLong(tokenId)));
+
+        List<TypeReference<?>> outputParameters = new ArrayList<>();
+        outputParameters.add(new TypeReference<Uint96>() {}); //nonce
+        outputParameters.add(new TypeReference<Address>() {}); //operator
+        outputParameters.add(new TypeReference<Address>() {}); //token0
+        outputParameters.add(new TypeReference<Address>() {}); //token1
+        outputParameters.add(new TypeReference<Uint24>() {});//fee
+        outputParameters.add(new TypeReference<Int24>() {}); //tickLower
+        outputParameters.add(new TypeReference<Int24>() {}); //tickUpper
+        outputParameters.add(new TypeReference<Uint128>() {}); //liquidity
+        outputParameters.add(new TypeReference<Uint256>() {}); //feeGrowthInside0LastX128 返回池中代币的费用增长情况，用于计算流动性提供者的收益。
+        outputParameters.add(new TypeReference<Uint256>() {}); //feeGrowthInside1LastX128 返回池中代币的费用增长情况，用于计算流动性提供者的收益。
+        outputParameters.add(new TypeReference<Uint128>() {});
+        outputParameters.add(new TypeReference<Uint128>() {});
+
+        Function function = new Function("positions", inputParameters, outputParameters);
+
+        ContractsConfig.ContractInfo nonFungiblePositionManagerCI = contractsConfig.getContractInfo("NonfungiblePositionManager");
+
+        try {
+            List<Type> returnList = callContractFunction(function, nonFungiblePositionManagerCI.getAddress());
+            return returnList;
+            //return returnList.get(0).getValue().toString();
+        } catch (ExecutionException e) {
+            // throw new RuntimeException(e);
+            log.error("call getUniswapV3PoolDetails ExecutionException: ", e);
+        } catch (InterruptedException e) {
+            //throw new RuntimeException(e);
+            log.error("call getUniswapV3PoolDetails InterruptedException: ", e);
+        }
+        return null;
+    }
+
+    public String getPoolAddress(String token0, String token1, int fee) {
+
+
+        ContractsConfig.ContractInfo factoryAddressCI = contractsConfig.getContractInfo("v3CoreFactoryAddress");
+        String factoryAddress = factoryAddressCI.getAddress();
+
+
+        String poolAddress = CalculatePoolAddress.getPoolAddress(POOL_INIT_CODE_HASH,factoryAddress,token0,token1,BigInteger.valueOf(fee) );
+
+        return poolAddress;
+    }
+
+
+    public String getNftOwnerOf(String contractAddress, String tokenId)  {
+
+        // https://stackoverflow.com/questions/52028956/web3j-java-function-call-returns-empty-list-on-solidity-contract
+        TransactionManager manager = new ReadonlyTransactionManager(web3j, "0xA81C479AB649D8de1d07bAD978301aFaD2890608");
+        // use credentials get error: Empty value (0x) returned from contract web3j
+        ERC721 contract = ERC721.load(contractAddress, this.web3j, manager/*Web3jUtils.credentials*/, new DefaultGasProvider());
+        try {
+            String owner = contract.ownerOf(new BigInteger(tokenId)).send();
+            return owner;
+        }
+        catch (Exception e)
+        {
+            log.error("获取Pool价格区间对应对应的NFT token: {} 对应的 owner 错误, 合约地址：{}, 错误：{}", tokenId, contractAddress, e);
+            return null;
+        }
+    }
+
+    /**
+     * function slot0() external view returns (
+     *     uint160 sqrtPriceX96,
+     *     int24 tick,
+     *     uint16 observationIndex,
+     *     uint16 observationCardinality,
+     *     uint16 observationCardinalityNext,
+     *     uint8 feeProtocol,
+     *     bool unlocked
+     * );
+     * @return
+     */
+    public List<Type> getUniswapV3PoolSlot0(String poolAddress){
+
+        List<Type> inputParameters = new ArrayList<>();
+//        inputParameters.add(new Uint256(Long.parseLong(tokenId)));
+
+        List<TypeReference<?>> outputParameters = new ArrayList<>();
+        outputParameters.add(new TypeReference<Uint160>() {});
+        outputParameters.add(new TypeReference<Int24>() {});
+        outputParameters.add(new TypeReference<Uint16>() {});
+        outputParameters.add(new TypeReference<Uint16>() {});
+        outputParameters.add(new TypeReference<Uint16>() {});
+        outputParameters.add(new TypeReference<Uint8>() {});
+        outputParameters.add(new TypeReference<Bool>() {});
+
+
+        Function function = new Function("slot0", inputParameters, outputParameters);
+
+
+        try {
+            List<Type> returnList = callContractFunction(function, poolAddress);
+            return returnList;
+            //return returnList.get(0).getValue().toString();
+        } catch (ExecutionException e) {
+            // throw new RuntimeException(e);
+            log.error("call getUniswapV3PoolSlot0 ExecutionException: ", e);
+        } catch (InterruptedException e) {
+            //throw new RuntimeException(e);
+            log.error("call getUniswapV3PoolSlot0 InterruptedException: ", e);
         }
         return null;
     }

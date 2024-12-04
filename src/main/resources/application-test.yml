@@ -28,14 +28,9 @@ spring:
         rollback-on-commit-failure: true
       leak-detection-threshold: 3500000
 
-  jpa:
-    hibernate:
-      ddl-auto: update
-    show-sql: true
-    open-in-view: false
 
 contracts:
-  start: 1
+  start: 1381057
   step: 10
   enabled: true
   contractList:
@@ -58,5 +53,5 @@ tabi:
   chainId: 9788
 
 epoch:
-  startTimestamp: 1731687826251 # epoch 周期起始时间(块号对应的时间戳：我们这里用毫秒级时间戳)
+  startTimestamp: 1732521995000 # epoch 周期起始时间(块号对应的时间戳：我们这里用毫秒级时间戳)
   unit: 86400000 # 一个epoch时长： 1天，单位毫秒

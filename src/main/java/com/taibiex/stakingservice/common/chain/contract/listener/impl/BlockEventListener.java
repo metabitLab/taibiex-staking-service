@@ -17,16 +17,21 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Component;
 import org.springframework.util.ObjectUtils;
+import org.springframework.validation.BindException;
 import org.web3j.abi.EventEncoder;
 import org.web3j.abi.datatypes.Event;
 import org.web3j.protocol.core.methods.response.EthLog;
 import org.web3j.protocol.core.methods.response.Log;
 
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.math.BigInteger;
+import java.sql.SQLIntegrityConstraintViolationException;
 import java.sql.Timestamp;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
@@ -156,7 +161,7 @@ public class BlockEventListener {
         topicAndContractAddr2EventMap.put(nonFungiblePositionManagerTopicEventDecreaseLiquidity + "_" + nonFungiblePositionManagerCI.getAddress(), nonFungiblePositionManagerDecreaseLiquidityEvent);
         topicAndContractAddr2CallBackMap.put(nonFungiblePositionManagerTopicEventDecreaseLiquidity + "_" + nonFungiblePositionManagerCI.getAddress(), MintEventHandler.class.getMethod("descDecreaseLiquidityEvent", Log.class));
 
-        Event nonFungiblePositionManagerIncreaseLiquidityEvent = new ContractsEventBuilder().build(ContractsEventEnum.DECREASE_LIQUIDITY);
+        Event nonFungiblePositionManagerIncreaseLiquidityEvent = new ContractsEventBuilder().build(ContractsEventEnum.INCREASE_LIQUIDITY);
         String nonFungiblePositionManagerTopicEventIncreaseLiquidity = EventEncoder.encode(nonFungiblePositionManagerIncreaseLiquidityEvent).toLowerCase();
         topicAndContractAddr2EventMap.put(nonFungiblePositionManagerTopicEventIncreaseLiquidity + "_" + nonFungiblePositionManagerCI.getAddress(), nonFungiblePositionManagerIncreaseLiquidityEvent);
         topicAndContractAddr2CallBackMap.put(nonFungiblePositionManagerTopicEventIncreaseLiquidity + "_" + nonFungiblePositionManagerCI.getAddress(), MintEventHandler.class.getMethod("descIncreaseLiquidityEvent", Log.class));
@@ -260,8 +265,26 @@ public class BlockEventListener {
                 logger.info("Delay" + delayBlocks + "_" + "eventDispatcher call function: {} ", callBackMethod.getName());
                 callBackMethod.invoke(null, log);
 
-            } catch (Exception e) {
-                logger.info("Delay" + delayBlocks + "_" + "scan all nft albums run() function {} exception: {}", callBackMethod.getName(), e.getMessage());
+            }
+            catch (Exception e) {
+                e.printStackTrace();
+
+                String message = e.getMessage();
+                try {
+                    message = ((InvocationTargetException) e).getTargetException().getMessage();
+                }
+                catch (Exception e1)
+                {
+
+                }
+                if(message.contains("Duplicate entry"))
+                {
+                    //错误不处理 模拟 insert ignore into, 此处错误可忽略
+                    logger.info("Delay" + delayBlocks + "_" + "Event handler  insert failed DuplicateKeyException function: {}, message:{}", callBackMethod.getName(), e.getMessage());
+                }
+                else{
+                    logger.info("Delay" + delayBlocks + "_" + "Event handler Exception function: {}, message: {}", callBackMethod.getName(), message );
+                }
             }
 
         }
