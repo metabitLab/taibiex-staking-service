@@ -1,10 +1,9 @@
 package com.taibiex.stakingservice.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.taibiex.stakingservice.common.hibernate.Comment;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -53,7 +52,10 @@ import java.util.List;
         @Index(name = "pool_pair_idx", columnList = "token0, token1, fee", unique = true)
         //token0, token1, fee <==> pool (address)
 })
-@Data
+
+//@Data and add the @JsonIgnore for @OneToMany //https://blog.csdn.net/qq_44766883/article/details/107126456 and https://blog.csdn.net/qq_41621362/article/details/103997237 for fix: StackOverflowError
+@Setter
+@Getter
 @AllArgsConstructor
 @NoArgsConstructor
 @Comment("后台配置 奖励的池子列表")
@@ -82,6 +84,7 @@ public class RewardPool extends BaseEntity{
      * mappedBy 属性指定了关系的反向端，即 RewardPoolTickRange 类中的 reward_pool 属性。
      * cascade = CascadeType.ALL 表示当对 RewardPool 进行持久化操作时，相关的 RewardPoolTickRange 实体也会自动进行持久化。
      */
+    @JsonIgnore  //在一的一方加的 //@Data and add the @JsonIgnore for @OneToMany //https://blog.csdn.net/qq_44766883/article/details/107126456 and https://blog.csdn.net/qq_41621362/article/details/103997237 for fix: StackOverflowError
     @OneToMany(mappedBy = "rewardPool", fetch = FetchType.EAGER) //https://blog.csdn.net/qq_43618881/article/details/105214416
     private List<RewardPoolTickRange> rewardPoolTickRanges;
 
