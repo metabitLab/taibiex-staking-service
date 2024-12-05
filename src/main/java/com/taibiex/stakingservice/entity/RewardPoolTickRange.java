@@ -55,7 +55,7 @@ public class RewardPoolTickRange extends BaseEntity{
     name 属性的值应该与数据库中对应的外键列的名称完全匹配。如果数据库中外键列的名称是 reward_pool_id，
     那么在 @JoinColumn 中 name 属性也应该设置为 "reward_pool_id"。
      */
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.EAGER) //https://blog.csdn.net/qq_43618881/article/details/105214416
     //JoinColumn 指定外键列：nullable = true 表示在 RewardPoolTickRange 表中有一个 reward_pool_id 列，但不在数据库中强制执行外键约束
     @JoinColumn(name = "reward_pool_id", nullable = true) // 允许为 null
     private RewardPool rewardPool;

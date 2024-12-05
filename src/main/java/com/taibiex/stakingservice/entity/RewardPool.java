@@ -82,7 +82,7 @@ public class RewardPool extends BaseEntity{
      * mappedBy 属性指定了关系的反向端，即 RewardPoolTickRange 类中的 reward_pool 属性。
      * cascade = CascadeType.ALL 表示当对 RewardPool 进行持久化操作时，相关的 RewardPoolTickRange 实体也会自动进行持久化。
      */
-    @OneToMany(mappedBy = "rewardPool")
+    @OneToMany(mappedBy = "rewardPool", fetch = FetchType.EAGER) //https://blog.csdn.net/qq_43618881/article/details/105214416
     private List<RewardPoolTickRange> rewardPoolTickRanges;
 
 
