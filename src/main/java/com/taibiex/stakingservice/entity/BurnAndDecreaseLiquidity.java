@@ -20,7 +20,7 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class BurnAndDecreaseLiquidity extends BaseEntity{
+public class BurnAndDecreaseLiquidity extends LiquidityEvent{
 
     @Column(name = "tx_hash", nullable = false, length = 100)
     private String txHash;

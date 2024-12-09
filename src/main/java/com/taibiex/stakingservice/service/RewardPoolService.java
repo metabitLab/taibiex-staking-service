@@ -8,7 +8,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigInteger;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @Service
@@ -32,5 +35,40 @@ public class RewardPoolService {
         }
         PoolMapSingleton.put(rewardPool.getPool(), rewardPool);
         rewardPoolRepository.save(rewardPool);
+    }
+
+    /**
+     * 获取所有池子对应的奖励比率
+     * @return
+     * poolAddress -> rewardRatio
+     */
+    public Map<String, String> getPoolRewardMap() {
+        Map<String, String> rewardMap = new HashMap<>();
+        rewardPoolRepository.findAll().forEach(rewardPool -> rewardMap.put(rewardPool.getPool(), rewardPool.getFee()));
+        return rewardMap;
+    }
+
+    /**
+     * 获取奖池内不同tick的奖励比率
+     */
+    public Map<String, BigInteger> getPoolTickRewardMap(String poolAddress) {
+        Map<String, BigInteger> rewardMap = new HashMap<>();
+        RewardPool pool = rewardPoolRepository.findByPool(poolAddress);
+        if (pool == null){
+            return rewardMap;
+        }
+        pool.getRewardPoolTickRanges().forEach(rewardPoolTickRange -> rewardMap.put(rewardPoolTickRange.getTickLower() + "-" + rewardPoolTickRange.getTickUpper(), rewardPoolTickRange.getRewardRatio()));
+        return rewardMap;
+    }
+
+    /**
+     * 获取所有奖池内不同tick的奖励比率
+     */
+    public Map<String, BigInteger> getAllPoolTickRewardMap() {
+        Map<String, BigInteger> rewardMap = new HashMap<>();
+        rewardPoolRepository.findAll().forEach(
+                rewardPool -> rewardPool.getRewardPoolTickRanges().forEach(
+                        rewardPoolTickRange -> rewardMap.put(rewardPool.getPool() + "-" + rewardPoolTickRange.getTickLower() + "-" + rewardPoolTickRange.getTickUpper(), rewardPoolTickRange.getRewardRatio())));
+        return rewardMap;
     }
 }
