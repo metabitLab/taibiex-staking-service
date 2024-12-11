@@ -62,13 +62,16 @@ public class RewardPoolService {
     }
 
     /**
-     * 获取所有奖池内不同tick的奖励比率
+     * 获取奖池内不同tick占总奖励的奖励比率
      */
-    public Map<String, BigInteger> getAllPoolTickRewardMap() {
-        Map<String, BigInteger> rewardMap = new HashMap<>();
-        rewardPoolRepository.findAll().forEach(
-                rewardPool -> rewardPool.getRewardPoolTickRanges().forEach(
-                        rewardPoolTickRange -> rewardMap.put(rewardPool.getPool() + "-" + rewardPoolTickRange.getTickLower() + "-" + rewardPoolTickRange.getTickUpper(), rewardPoolTickRange.getRewardRatio())));
+    public Map<Long, BigInteger> getPoolTickRewardRatioMap(String poolAddress) {
+        Map<Long, BigInteger> rewardMap = new HashMap<>();
+        RewardPool pool = rewardPoolRepository.findByPool(poolAddress);
+        if (pool == null){
+            return rewardMap;
+        }
+        String fee = pool.getFee();
+        pool.getRewardPoolTickRanges().forEach(rewardPoolTickRange -> rewardMap.put(rewardPoolTickRange.getId(), rewardPoolTickRange.getRewardRatio().multiply(new BigInteger(fee)).divide(new BigInteger("10000"))));
         return rewardMap;
     }
 }

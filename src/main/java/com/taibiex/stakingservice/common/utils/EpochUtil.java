@@ -3,6 +3,8 @@ package com.taibiex.stakingservice.common.utils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import java.math.BigInteger;
+
 @Component
 public class EpochUtil {
 
@@ -12,12 +14,31 @@ public class EpochUtil {
     @Value("${epoch.unit}")
     public String epochUnit;
 
+
+    public BigInteger getEpochUnit(){
+        return new BigInteger(epochUnit);
+    }
+
     /**
      * 获取当前时间戳对应的epoch
      * @return
      */
     public long getCurrentEpoch() {
         return getEpoch(System.currentTimeMillis());
+    }
+
+    /**
+     * 获取上个epoch
+     */
+    public long getLastEpoch() {
+        return getCurrentEpoch() - 1;
+    }
+
+    /**
+     * 获取上个周期结束时间戳
+     */
+    public long getLastEpochEndTime() {
+        return getEpochEndTime(getLastEpoch());
     }
 
     /**

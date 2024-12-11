@@ -8,18 +8,34 @@ import java.math.BigInteger;
 import java.sql.Timestamp;
 
 @Data
-@AllArgsConstructor
-@NoArgsConstructor
 public class LastLiquidityEvent {
 
     private long epoch;
 
     private String poolAddress;
 
-    private BigInteger stakingAmount0;
+    private BigInteger amount;
 
-    private BigInteger stakingAmount1;
+    private BigInteger amount0;
+
+    private BigInteger amount1;
+
+    private BigInteger stakingAmount;
 
     private Timestamp eventTime;
 
+    public LastLiquidityEvent(long epoch, String poolAddress, BigInteger amount, BigInteger stakingAmount, Timestamp eventTime) {
+        this.epoch = epoch;
+        this.poolAddress = poolAddress;
+        this.amount = amount;
+        this.stakingAmount = stakingAmount;
+        this.eventTime = eventTime;
+    }
+
+    public LastLiquidityEvent(long epoch, String poolAddress, BigInteger amount, Timestamp eventTime) {
+        this.epoch = epoch;
+        this.poolAddress = poolAddress;
+        this.amount = amount;
+        this.eventTime = eventTime;
+    }
 }

@@ -52,3 +52,6 @@ springdoc:
     - group: 'default'
       paths-to-match: '/**'
       packages-to-scan: com.taibiex.stakingservice.controller
+
+app:
+  total-reward-amount: 100000000000000000000

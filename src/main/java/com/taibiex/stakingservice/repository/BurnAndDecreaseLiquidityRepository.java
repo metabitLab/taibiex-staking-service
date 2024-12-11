@@ -16,8 +16,6 @@ public interface BurnAndDecreaseLiquidityRepository extends JpaRepository<BurnAn
 
     List<BurnAndDecreaseLiquidity> findAllBySenderOrderByCreateTime(String sender);
 
-    List<BurnAndDecreaseLiquidity> findAllByPoolAndCreateTimeBetween(String pool, Timestamp createTime, Timestamp createTime2);
-
-    List<BurnAndDecreaseLiquidity> findAllByPoolAndTickLowerAndTickUpperOrderByCreateTime(String pool, String tickLower, String tickUpper);
+    List<BurnAndDecreaseLiquidity> findAllByPoolAndTickLowerAndTickUpperAndCreateTimeBeforeOrderByCreateTime(String pool, String tickLower, String tickUpper, Timestamp createTime);
 
 }

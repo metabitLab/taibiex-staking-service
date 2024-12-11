@@ -4,6 +4,7 @@ import com.taibiex.stakingservice.entity.MintAndIncreaseLiquidity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.sql.Timestamp;
 import java.util.List;
 
 @Repository
@@ -15,8 +16,6 @@ public interface MintAndIncreaseLiquidityRepository extends JpaRepository<MintAn
 
     List<MintAndIncreaseLiquidity> findAllBySenderOrderByCreateTime(String sender);
 
-    List<MintAndIncreaseLiquidity> findAllByPoolAndCreateTimeBetween(String pool, long start, long end);
-
-    List<MintAndIncreaseLiquidity> findAllByPoolAndTickLowerAndTickUpperOrderByCreateTime(String pool, String tickLower, String tickUpper);
+    List<MintAndIncreaseLiquidity> findAllByPoolAndTickLowerAndTickUpperAndCreateTimeBeforeOrderByCreateTime(String pool, String tickLower, String tickUpper, Timestamp createTime);
 
 }
