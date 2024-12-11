@@ -6,8 +6,7 @@ import com.taibiex.stakingservice.dto.StakingAmountDTO;
 import com.taibiex.stakingservice.dto.StakingAmountRatio;
 import com.taibiex.stakingservice.dto.EpochTotalStakingAmount;
 import com.taibiex.stakingservice.entity.*;
-import com.taibiex.stakingservice.repository.BurnAndDecreaseLiquidityRepository;
-import com.taibiex.stakingservice.repository.MintAndIncreaseLiquidityRepository;
+import com.taibiex.stakingservice.repository.LiquidityEventRepository;
 import com.taibiex.stakingservice.repository.RewardPoolRepository;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Value;
@@ -31,21 +30,17 @@ public class StakingRewardService {
 
     private final RewardPoolService rewardPoolService;
 
-    private final MintAndIncreaseLiquidityRepository mintAndIncreaseLiquidityRepository;
-
-    private final BurnAndDecreaseLiquidityRepository burnAndDecreaseLiquidityRepository;
+    private final LiquidityEventRepository liquidityEventRepository;
 
     private final EpochUtil epochUtil;
 
     public StakingRewardService(RewardPoolRepository rewardPoolRepository,
                                 RewardPoolService rewardPoolService,
-                                MintAndIncreaseLiquidityRepository mintAndIncreaseLiquidityRepository,
-                                BurnAndDecreaseLiquidityRepository burnAndDecreaseLiquidityRepository,
+                                LiquidityEventRepository liquidityEventRepository,
                                 EpochUtil epochUtil) {
         this.rewardPoolRepository = rewardPoolRepository;
         this.rewardPoolService = rewardPoolService;
-        this.mintAndIncreaseLiquidityRepository = mintAndIncreaseLiquidityRepository;
-        this.burnAndDecreaseLiquidityRepository = burnAndDecreaseLiquidityRepository;
+        this.liquidityEventRepository = liquidityEventRepository;
         this.epochUtil = epochUtil;
     }
 
@@ -139,24 +134,17 @@ public class StakingRewardService {
         long previousEpoch = epochUtil.getLastEpoch();
         long previousEpochEndTime = epochUtil.getLastEpochEndTime();
 
-        List<MintAndIncreaseLiquidity> mintAndIncreaseLiquidises =
-                mintAndIncreaseLiquidityRepository.findAllByPoolAndTickLowerAndTickUpperAndCreateTimeBeforeOrderByCreateTime(poolAddress, tickLower, tickUpper, new Timestamp(previousEpochEndTime));
-        List<BurnAndDecreaseLiquidity> burnAndDecreaseLiquidises =
-                burnAndDecreaseLiquidityRepository.findAllByPoolAndTickLowerAndTickUpperAndCreateTimeBeforeOrderByCreateTime(poolAddress, tickLower, tickUpper, new Timestamp(previousEpochEndTime));
+        List<LiquidityEvent> liquidises =
+                liquidityEventRepository.findAllByPoolAndTickLowerAndTickUpperAndCreateTimeBeforeOrderByCreateTime(poolAddress, tickLower, tickUpper, new Timestamp(previousEpochEndTime));
 
         List<LiquidityEvent> liquidityEvents = new ArrayList<>();
-        liquidityEvents.addAll(mintAndIncreaseLiquidises);
-        liquidityEvents.addAll(burnAndDecreaseLiquidises);
+        liquidityEvents.addAll(liquidises);
         liquidityEvents.sort(Comparator.comparing(LiquidityEvent::getCreateTime));
         Map<Long, EpochTotalStakingAmount> totalAmountMap = new HashMap<>();
         List<EpochTotalStakingAmount> epochTotalStakingAmountList = new ArrayList<>();
 
         for (LiquidityEvent liquidityEvent : liquidityEvents) {
-            if (liquidityEvent instanceof MintAndIncreaseLiquidity mintAndIncreaseLiquidity) {
-                mintEventTotalStakingHandler(liquidityEvent, mintAndIncreaseLiquidity, totalAmountMap, epochTotalStakingAmountList);
-            } else if (liquidityEvent instanceof BurnAndDecreaseLiquidity burnAndDecreaseLiquidity) {
-                burnEventTotalStakingHandler(liquidityEvent, burnAndDecreaseLiquidity, totalAmountMap, epochTotalStakingAmountList);
-            }
+//            burnEventTotalStakingHandler(liquidityEvent, totalAmountMap, epochTotalStakingAmountList);
         }
         EpochTotalStakingAmount epochTotalStakingAmount = totalAmountMap.get(previousEpoch);
         epochTotalStakingAmount.setTotalStakingAmount(epochTotalStakingAmount.getTotalStakingAmount()
@@ -164,8 +152,9 @@ public class StakingRewardService {
         return totalAmountMap;
     }
 
-    private void mintEventTotalStakingHandler(LiquidityEvent liquidityEvent, MintAndIncreaseLiquidity mintAndIncreaseLiquidity, Map<Long, EpochTotalStakingAmount> totalAmountMap, List<EpochTotalStakingAmount> epochTotalStakingAmountList) {
-        BigInteger eventAmount = new BigInteger(mintAndIncreaseLiquidity.getAmount0());
+    //TODO:
+    private void mintEventTotalStakingHandler(LiquidityEvent liquidityEvent,  Map<Long, EpochTotalStakingAmount> totalAmountMap, List<EpochTotalStakingAmount> epochTotalStakingAmountList) {
+        BigInteger eventAmount = new BigInteger(liquidityEvent.getAmount0());
         Timestamp eventCreateTime = liquidityEvent.getCreateTime();
         // 事件epoch
         Long eventEpoch = epochUtil.getEpoch(eventCreateTime.getTime());
@@ -204,8 +193,9 @@ public class StakingRewardService {
         }
     }
 
-    private void burnEventTotalStakingHandler(LiquidityEvent liquidityEvent, BurnAndDecreaseLiquidity burnAndDecreaseLiquidity, Map<Long, EpochTotalStakingAmount> totalAmountMap, List<EpochTotalStakingAmount> epochTotalStakingAmountList) {
-        BigInteger eventAmount = new BigInteger(burnAndDecreaseLiquidity.getAmount0());
+    //TODO:
+    private void burnEventTotalStakingHandler(LiquidityEvent liquidityEvent, LiquidityEvent liquidityChange, Map<Long, EpochTotalStakingAmount> totalAmountMap, List<EpochTotalStakingAmount> epochTotalStakingAmountList) {
+        BigInteger eventAmount = new BigInteger(liquidityChange.getAmount0());
         Timestamp eventCreateTime = liquidityEvent.getCreateTime();
         // 事件epoch
         Long eventEpoch = epochUtil.getEpoch(eventCreateTime.getTime());
@@ -258,22 +248,16 @@ public class StakingRewardService {
 
         Map<String, Map<String, List<LastLiquidityEvent>>> rewardMap = new HashMap<>();
 
-        List<MintAndIncreaseLiquidity> mintAndIncreaseLiquidises =
-                mintAndIncreaseLiquidityRepository.findAllByPoolAndTickLowerAndTickUpperAndCreateTimeBeforeOrderByCreateTime(poolAddress, tickLower, tickUpper, new Timestamp(lastEpochEndTime));
-        List<BurnAndDecreaseLiquidity> burnAndDecreaseLiquidises =
-                burnAndDecreaseLiquidityRepository.findAllByPoolAndTickLowerAndTickUpperAndCreateTimeBeforeOrderByCreateTime(poolAddress, tickLower, tickUpper, new Timestamp(lastEpochEndTime));
+       List<LiquidityEvent> liquidises =
+                liquidityEventRepository.findAllByPoolAndTickLowerAndTickUpperAndCreateTimeBeforeOrderByCreateTime(poolAddress, tickLower, tickUpper, new Timestamp(lastEpochEndTime));
 
         List<LiquidityEvent> liquidityEvents = new ArrayList<>();
-        liquidityEvents.addAll(mintAndIncreaseLiquidises);
-        liquidityEvents.addAll(burnAndDecreaseLiquidises);
+        liquidityEvents.addAll(liquidises);
         liquidityEvents.sort(Comparator.comparing(LiquidityEvent::getCreateTime));
 
         liquidityEvents.forEach(liquidityEvent -> {
-            if (liquidityEvent instanceof MintAndIncreaseLiquidity mintAndIncreaseLiquidity){
-                mintAndIncreaseLiquidityEventHandler(poolAddress, tickLower, tickUpper, mintAndIncreaseLiquidity, rewardMap);
-            } else if (liquidityEvent instanceof BurnAndDecreaseLiquidity){
-                burnLiquidityEventHandler(poolAddress, tickLower, tickUpper, (BurnAndDecreaseLiquidity) liquidityEvent, rewardMap);
-            }
+            //TODO:这里需处理mint和burn
+            burnLiquidityEventHandler(poolAddress, tickLower, tickUpper, liquidityEvent, rewardMap);
         });
 
         //处理最后一次事件到上一期结束之间的质押量
@@ -312,7 +296,7 @@ public class StakingRewardService {
         return rewardMap;
     }
 
-    private void mintAndIncreaseLiquidityEventHandler(String poolAddress, String tickLower, String tickUpper, MintAndIncreaseLiquidity mintAndIncreaseLiquidity, Map<String, Map<String, List<LastLiquidityEvent>>> rewardMap) {
+    private void mintAndIncreaseLiquidityEventHandler(String poolAddress, String tickLower, String tickUpper, LiquidityEvent mintAndIncreaseLiquidity, Map<String, Map<String, List<LastLiquidityEvent>>> rewardMap) {
         String userAddress = mintAndIncreaseLiquidity.getSender();
         BigInteger amount = new BigInteger(mintAndIncreaseLiquidity.getAmount());
         BigInteger amount0 = new BigInteger(mintAndIncreaseLiquidity.getAmount0());
@@ -381,13 +365,13 @@ public class StakingRewardService {
         }
     }
 
-    private void burnLiquidityEventHandler(String poolAddress, String tickLower, String tickUpper, BurnAndDecreaseLiquidity burnAndDecreaseLiquidity, Map<String, Map<String, List<LastLiquidityEvent>>> rewardMap) {
-        String userAddress = burnAndDecreaseLiquidity.getSender();
-        BigInteger eventAmount = new BigInteger(burnAndDecreaseLiquidity.getAmount());
-        BigInteger eventAmount0 = new BigInteger(burnAndDecreaseLiquidity.getAmount0());
-        BigInteger eventAmount1 = new BigInteger(burnAndDecreaseLiquidity.getAmount1());
+    private void burnLiquidityEventHandler(String poolAddress, String tickLower, String tickUpper, LiquidityEvent liquidityEvent, Map<String, Map<String, List<LastLiquidityEvent>>> rewardMap) {
+        String userAddress = liquidityEvent.getSender();
+        BigInteger eventAmount = new BigInteger(liquidityEvent.getAmount());
+        BigInteger eventAmount0 = new BigInteger(liquidityEvent.getAmount0());
+        BigInteger eventAmount1 = new BigInteger(liquidityEvent.getAmount1());
 
-        Timestamp createTime = burnAndDecreaseLiquidity.getCreateTime();
+        Timestamp createTime = liquidityEvent.getCreateTime();
         // 事件epoch
         long epoch = epochUtil.getEpoch(createTime.getTime());
         String tickLowerTickUpper = tickLower + "-" + tickUpper;
