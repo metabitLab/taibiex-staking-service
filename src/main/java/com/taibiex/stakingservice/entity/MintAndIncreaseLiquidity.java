@@ -21,7 +21,7 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class MintAndIncreaseLiquidity extends LiquidityEvent{
+public class MintAndIncreaseLiquidity extends BaseEntity{
 
     //Mint
     @Column(name = "tx_hash", nullable = false, length = 100)
