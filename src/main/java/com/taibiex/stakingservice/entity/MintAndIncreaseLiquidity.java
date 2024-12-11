@@ -16,13 +16,12 @@ import lombok.NoArgsConstructor;
         @Index(name = "token_id_idx", columnList = "token_id"),
         @Index(name = "pool_idx", columnList = "pool"),
         @Index(name = "tx_hash_idx", columnList = "tx_hash", unique = true),
-
 })
 
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class MintAndIncreaseLiquidity extends BaseEntity{
+public class MintAndIncreaseLiquidity extends LiquidityEvent{
 
     //Mint
     @Column(name = "tx_hash", nullable = false, length = 100)

@@ -56,5 +56,5 @@ tabi:
 
 epoch:
   startTimestamp: 1732521995000 # epoch 周期起始时间(块号对应的时间戳：我们这里用毫秒级时间戳)
-  unit: 86400000 # 一个epoch时长： 1天，单位毫秒
+  unit: 3600000 # 一个epoch时长： 1小时，单位毫秒
 
