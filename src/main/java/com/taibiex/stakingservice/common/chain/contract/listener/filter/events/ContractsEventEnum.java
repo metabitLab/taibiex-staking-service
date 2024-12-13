@@ -25,6 +25,18 @@ public enum ContractsEventEnum {
 
     POOL_CREATED,
 
-    POOL_CREATED_DESC;
+    POOL_CREATED_DESC,
 
+    STAKING,
+
+    STAKING_DESC,
+
+    UN_STAKING,
+
+    UN_STAKING_DESC,
+
+    CLAIM,
+    CLAIM_DESC,
+    CLAIM_INDEX,
+    CLAIM_INDEX_DESC,
 }
