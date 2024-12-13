@@ -37,6 +37,12 @@ contracts:
     - name: "v3CoreFactoryAddress"
       address: "0x1714F3f9d1fbC311422d700602483817F48Cca5F"
       enabled: true
+    - name: "StakingPool" # 单币质押
+      address: ""
+      enabled: true
+    - name: "BatchTransferReward" #lp批量转账
+      address: ""
+      enabled: true
 
 web3j:
   client-address: https://rpc.testnetv2.tabichain.com
@@ -49,7 +55,7 @@ knife4j:
     language: en
 
 tabi:
-  password: guokaipeng123
+  password: qetgkp878
   chainId: 9788
 
 epoch:
