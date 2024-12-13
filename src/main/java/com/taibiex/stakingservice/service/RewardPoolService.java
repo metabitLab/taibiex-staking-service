@@ -8,6 +8,7 @@ import com.taibiex.stakingservice.repository.RewardPoolRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -19,6 +20,9 @@ import java.util.Map;
 @Slf4j
 @Service
 public class RewardPoolService {
+
+    @Value("${app.total-reward-amount}")
+    private String totalRewardAmount;
 
     @Autowired
     RewardPoolRepository rewardPoolRepository;
@@ -165,7 +169,7 @@ public class RewardPoolService {
     }
 
     /**
-     * 获取奖池内不同tick占总奖励的奖励比率
+     * 获取奖池内不同tick的奖励金额
      */
     public Map<Long, BigInteger> getPoolTickRewardRatioMap(String poolAddress) {
         Map<Long, BigInteger> rewardMap = new HashMap<>();
@@ -174,7 +178,12 @@ public class RewardPoolService {
             return rewardMap;
         }
         String fee = pool.getFee();
-        pool.getRewardPoolTickRanges().forEach(rewardPoolTickRange -> rewardMap.put(rewardPoolTickRange.getId(), rewardPoolTickRange.getRewardRatio().multiply(new BigInteger(fee)).divide(new BigInteger("10000"))));
+        for (RewardPoolTickRange rewardPoolTickRange : pool.getRewardPoolTickRanges()) {
+            BigInteger rewardAmount = new BigInteger(totalRewardAmount)
+                    .multiply(new BigInteger(fee)).divide(new BigInteger("10000"))
+                    .multiply(rewardPoolTickRange.getRewardRatio()).divide(new BigInteger("10000"));
+            rewardMap.put(rewardPoolTickRange.getId(), rewardAmount);
+        }
         return rewardMap;
     }
 }
