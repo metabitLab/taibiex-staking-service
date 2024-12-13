@@ -25,6 +25,8 @@ public class UserPoolRewardService {
 
     private final UserPoolRewardRepository userPoolRewardRepository;
 
+    private final EpochRewardConfigService epochRewardConfigService;
+
     public final ActivityUserRepository activityUserRepository;
 
     public final TickRangeStakingInfoService tickRangeStakingInfoService;
@@ -35,6 +37,7 @@ public class UserPoolRewardService {
 
     public UserPoolRewardService(RedisService redisService, EpochUtil epochUtil,
                                  UserPoolRewardRepository userPoolRewardRepository,
+                                 EpochRewardConfigService epochRewardConfigService,
                                  ActivityUserRepository activityUserRepository,
                                  TickRangeStakingInfoService tickRangeStakingInfoService,
                                  UserStakingInfoService userStakingInfoService,
@@ -42,6 +45,7 @@ public class UserPoolRewardService {
         this.redisService = redisService;
         this.epochUtil = epochUtil;
         this.userPoolRewardRepository = userPoolRewardRepository;
+        this.epochRewardConfigService = epochRewardConfigService;
         this.activityUserRepository = activityUserRepository;
         this.tickRangeStakingInfoService = tickRangeStakingInfoService;
         this.userStakingInfoService = userStakingInfoService;
@@ -60,6 +64,7 @@ public class UserPoolRewardService {
             if (!userPoolRewards.isEmpty()) {
                 return;
             }
+            EpochRewardConfig epochRewardConfig = epochRewardConfigService.getEpochRewardConfig();
             List<RewardPool> rewardPools = rewardPoolService.findAll();
             List<ActivityUser> allUser = activityUserRepository.findAll();
             for (ActivityUser activityUser : allUser) {
@@ -102,6 +107,9 @@ public class UserPoolRewardService {
                     userPoolReward.setClaimed(false);
                     userPoolReward.setTokenAddress("1");
                     userPoolReward.setTokenSymbol("1");
+                    userPoolReward.setTokenSymbol(epochRewardConfig.getTokenSymbol());
+                    userPoolReward.setTokenAddress(epochRewardConfig.getTokenAddress());
+                    userPoolReward.setMainNet(epochRewardConfig.isMainNet());
                     userPoolRewardRepository.save(userPoolReward);
                 }
             }

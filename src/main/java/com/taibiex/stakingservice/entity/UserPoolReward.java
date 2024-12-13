@@ -39,7 +39,13 @@ public class UserPoolReward extends BaseEntity{
     @Column(name = "token_address", nullable = false, length = 100)
     private String tokenAddress;
 
+    @Column(name = "epoch_reward_amount", nullable = false, columnDefinition = " varchar(255) default '0'")
+    private String epochRewardAmount;
+
     @Column(name = "claimed", nullable = false)
     private boolean claimed;
+
+    @Column(name = "main_net", nullable = false)
+    private boolean mainNet;
 
 }

@@ -2,6 +2,7 @@ package com.taibiex.stakingservice.service;
 
 import com.taibiex.stakingservice.common.constant.PoolMapSingleton;
 import com.taibiex.stakingservice.common.utils.XIntervalOverlap;
+import com.taibiex.stakingservice.entity.EpochRewardConfig;
 import com.taibiex.stakingservice.entity.RewardPool;
 import com.taibiex.stakingservice.entity.RewardPoolTickRange;
 import com.taibiex.stakingservice.repository.RewardPoolRepository;
@@ -26,6 +27,9 @@ public class RewardPoolService {
 
     @Autowired
     RewardPoolRepository rewardPoolRepository;
+
+    @Autowired
+    private EpochRewardConfigService epochRewardConfigService;
 
 
     /**
@@ -177,9 +181,11 @@ public class RewardPoolService {
         if (pool == null) {
             return rewardMap;
         }
+        EpochRewardConfig epochRewardConfig = epochRewardConfigService.getEpochRewardConfig();
+        BigInteger epochRewardAmount = new BigInteger(epochRewardConfig.getRewardAmount());
         String fee = pool.getFee();
         for (RewardPoolTickRange rewardPoolTickRange : pool.getRewardPoolTickRanges()) {
-            BigInteger rewardAmount = new BigInteger(totalRewardAmount)
+            BigInteger rewardAmount = epochRewardAmount
                     .multiply(new BigInteger(fee)).divide(new BigInteger("10000"))
                     .multiply(rewardPoolTickRange.getRewardRatio()).divide(new BigInteger("10000"));
             rewardMap.put(rewardPoolTickRange.getId(), rewardAmount);
