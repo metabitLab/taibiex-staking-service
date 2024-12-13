@@ -39,6 +39,12 @@ contracts:
     - name: "NonfungiblePositionManager"
       address: "0xd8442B36A021Ec592638C8B3529E492c5f6799B9"
       enabled: true
+    - name: "StakingPool" # 单币质押
+      address: "0x06CB38541B139E24b2e95c88c9195BC8e4cA5774"
+      enabled: true
+    - name: "BatchTransferReward" #lp批量转账
+      address: "0xAC76Edd6F3B97573bdf9A93c2C6079dB18e00d8F"
+      enabled: true
 
 web3j:
   client-address: https://rpc.testnetv2.tabichain.com
