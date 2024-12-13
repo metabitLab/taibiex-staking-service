@@ -6,8 +6,10 @@ import com.taibiex.stakingservice.common.chain.contract.utils.EthLogsParser;
 import com.taibiex.stakingservice.common.chain.contract.utils.Web3jUtils;
 import com.taibiex.stakingservice.config.ContractsConfig;
 import com.taibiex.stakingservice.entity.LiquidityEvent;
+import com.taibiex.stakingservice.entity.RewardPool;
 import com.taibiex.stakingservice.service.LiquidityEventService;
 
+import com.taibiex.stakingservice.service.RewardPoolService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
@@ -32,12 +34,14 @@ public class MintEventHandler {
     private static LiquidityEventService liquidityEventService;
     private static Web3jUtils web3jUtils;
 
+    private static RewardPoolService rewardPoolService;
 
     static ContractsConfig contractsConfig;
 
-    public MintEventHandler(LiquidityEventService liquidityEventService, Web3jUtils web3jUtils, ContractsConfig contractsConfig) {
+    public MintEventHandler(LiquidityEventService liquidityEventService, Web3jUtils web3jUtils, RewardPoolService rewardPoolService, ContractsConfig contractsConfig) {
         MintEventHandler.liquidityEventService = liquidityEventService;
         MintEventHandler.web3jUtils = web3jUtils;
+        MintEventHandler.rewardPoolService = rewardPoolService;
         MintEventHandler.contractsConfig = contractsConfig;
     }
 
@@ -62,6 +66,17 @@ public class MintEventHandler {
         List<String> topics = evLog.getTopics();
 
         String poolAddress = evLog.getAddress();
+
+        BigInteger tickLower = EthLogsParser.hexToBigInteger(topics.get(2));
+        BigInteger tickUpper = EthLogsParser.hexToBigInteger(topics.get(3));
+
+        if(!rewardPoolService.poolAndTickInRewardPool(poolAddress, tickLower, tickUpper))
+        {
+            log.info("PoolMint poolAddress: {} and Tick: [{}, {}] are not in RewardPool, return and ignore", poolAddress, tickLower, tickUpper);
+            //不在奖池里的事件不处理
+            return;
+        }
+
         ContractsConfig.ContractInfo nonFungiblePositionManagerCI = contractsConfig.getContractInfo("NonfungiblePositionManager");
 
 
@@ -86,8 +101,8 @@ public class MintEventHandler {
 
         //注意：这里数据库存的交易hash中不能和logIndex一起存，因为情况2时这里有可能Pool和NonfungiblePositionManager添加流动性事件共同维护此记录(记录才能完全)
         mintAndIncreaseLiquidity.setTxHash(transactionHash /*+ "-" + evLog.getLogIndex(*/);
-        mintAndIncreaseLiquidity.setTickLower(EthLogsParser.hexToBigInteger(topics.get(2)).toString());
-        mintAndIncreaseLiquidity.setTickUpper(EthLogsParser.hexToBigInteger(topics.get(3)).toString());
+        mintAndIncreaseLiquidity.setTickLower(tickLower.toString());
+        mintAndIncreaseLiquidity.setTickUpper(tickUpper.toString());
         mintAndIncreaseLiquidity.setAmount(args.get(1).getValue().toString());
         mintAndIncreaseLiquidity.setAmount0(args.get(2).getValue().toString());
         mintAndIncreaseLiquidity.setAmount1(args.get(3).getValue().toString());
@@ -96,6 +111,7 @@ public class MintEventHandler {
         mintAndIncreaseLiquidity.setTokenId("");
         mintAndIncreaseLiquidity.setPool(poolAddress);
         mintAndIncreaseLiquidity.setType((short) 1);
+
 
         liquidityEventService.save(mintAndIncreaseLiquidity);
 
@@ -110,6 +126,16 @@ public class MintEventHandler {
         List<String> topics = evLog.getTopics();
 
         String poolAddress = evLog.getAddress();
+
+        BigInteger tickLower = EthLogsParser.hexToBigInteger(topics.get(2));
+        BigInteger tickUpper = EthLogsParser.hexToBigInteger(topics.get(3));
+
+        if(!rewardPoolService.poolAndTickInRewardPool(poolAddress, tickLower, tickUpper))
+        {
+            log.info("PoolBurn poolAddress: {} and Tick: [{}, {}] are not in RewardPool, return and ignore", poolAddress, tickLower, tickUpper);
+            //不在奖池里的事件不处理
+            return;
+        }
 
         if (!CollectionUtils.isEmpty(args)) {
             LiquidityEvent burnAndDecreaseLiquidityEvent = new LiquidityEvent();
@@ -134,8 +160,8 @@ public class MintEventHandler {
 
             //注意：这里数据库存的交易hash中不能和logIndex一起存，因为情况2时这里有可能Pool和NonfungiblePositionManager添加流动性事件共同维护此记录(记录才能完全)
             burnAndDecreaseLiquidityEvent.setTxHash(transactionHash/* + "-" + evLog.getLogIndex()*/);
-            burnAndDecreaseLiquidityEvent.setTickLower(EthLogsParser.hexToBigInteger(topics.get(2)).toString());
-            burnAndDecreaseLiquidityEvent.setTickUpper(EthLogsParser.hexToBigInteger(topics.get(3)).toString());
+            burnAndDecreaseLiquidityEvent.setTickLower(tickLower.toString());
+            burnAndDecreaseLiquidityEvent.setTickUpper(tickUpper.toString());
 
             String liquidity = args.get(0).getValue().toString();
             if(!StringUtils.equalsIgnoreCase(liquidity, "0"))
@@ -225,6 +251,14 @@ public class MintEventHandler {
             BigInteger tickUpper = (BigInteger)poolDetails.get(6).getValue();
 
             String poolAddress = web3jUtils.getPoolAddress(token0, token1, fee);
+
+            if(!rewardPoolService.poolAndTickInRewardPool(poolAddress, tickLower, tickUpper))
+            {
+                log.info("IncreaseLiquidity poolAddress: {} and Tick: [{}, {}] are not in RewardPool, return and ignore", poolAddress, tickLower, tickUpper);
+                //不在奖池里的事件不处理
+                return;
+            }
+
             //List<Type> poolInfo2 = web3jUtils.getUniswapV3PoolSlot0(poolAddress);
             ContractsConfig.ContractInfo nonFungiblePositionManagerCI = contractsConfig.getContractInfo("NonfungiblePositionManager");
 
@@ -319,6 +353,14 @@ public class MintEventHandler {
             BigInteger tickUpper = (BigInteger)poolDetails.get(6).getValue();
 
             String poolAddress = web3jUtils.getPoolAddress(token0, token1, fee);
+
+            if(!rewardPoolService.poolAndTickInRewardPool(poolAddress, tickLower, tickUpper))
+            {
+                log.info("DecreaseLiquidity poolAddress: {} and Tick: [{}, {}] are not in RewardPool, return and ignore", poolAddress, tickLower, tickUpper);
+                //不在奖池里的事件不处理
+                return;
+            }
+
             //List<Type> poolInfo2 = web3jUtils.getUniswapV3PoolSlot0(poolAddress);
             ContractsConfig.ContractInfo nonFungiblePositionManagerCI = contractsConfig.getContractInfo("NonfungiblePositionManager");
 
