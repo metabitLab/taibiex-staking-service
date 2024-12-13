@@ -67,6 +67,15 @@ public class StakingEventHandler {
 
         String stakingAmount = args.get(0).getValue().toString();
 
+        if(StringUtils.equalsIgnoreCase(stakingAmount, "0"))
+        {
+            //用户调用 stake(0)是领取奖励, claim(和claimIndex)是领取解质押后等待7天后，已解锁的本金
+            //忽略领取奖励事件 0xc7a1d1e6d39d0c0ac661cb9101a996be17c2c67e2bfde6cd72a18674dcff07cb
+
+            //质押0就是领取奖励. 质押，质押0，解质押都会领取奖励.只是一般将stake0作为领取奖励的方法
+            return;
+        }
+
         SPStaking spStaking = new SPStaking();
 
 //        Optional<Transaction> transaction = web3jUtils.getWeb3j().ethGetTransactionByHash(transactionHash).send().getTransaction();
@@ -102,7 +111,7 @@ public class StakingEventHandler {
 
         String userAddress = EthLogsParser.hexToAddress(topics.get(1));
 
-        String stakingAmount = args.get(0).getValue().toString();
+        String unStakingAmount = args.get(0).getValue().toString();
 
         String unlockBlock = args.get(1).getValue().toString();
 
@@ -114,7 +123,7 @@ public class StakingEventHandler {
         spStaking.setTxHash(transactionHash);
         spStaking.setCreateTime(eventHappenedTimeStamp);
         spStaking.setLastUpdateTime(eventHappenedTimeStamp);
-        spStaking.setAmount(stakingAmount);
+        spStaking.setAmount(unStakingAmount);
         spStaking.setUserAddress(userAddress);
         spStaking.setUnlockBlock(unlockBlock);
 

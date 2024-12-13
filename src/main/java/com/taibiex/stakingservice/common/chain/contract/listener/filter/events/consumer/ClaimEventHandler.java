@@ -20,7 +20,9 @@ import java.sql.Timestamp;
 import java.util.List;
 
 /**
- * 单币质押
+ * claim是领取解锁的token，不是领取奖励. claim那个得等7天才能解锁才能claim
+ * claim是一次性领取所有解锁了的本金，claimIndex是选定哪一期解锁. 和奖励没关系
+ *
  */
 @Slf4j
 @Component

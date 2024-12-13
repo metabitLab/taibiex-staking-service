@@ -40,7 +40,7 @@ contracts:
     - name: "StakingPool" # 单币质押
       address: "0x06CB38541B139E24b2e95c88c9195BC8e4cA5774"
       enabled: true
-    - name: "BatchTransferReward" #lp批量转账
+    - name: "BatchTransferReward" #lp批量转账(添加流动性 发奖励，与StakingPool没有关系)
       address: "0xAC76Edd6F3B97573bdf9A93c2C6079dB18e00d8F"
       enabled: true
 

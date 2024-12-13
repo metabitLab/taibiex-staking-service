@@ -148,6 +148,8 @@ function userUnstakeInfoLength(address _user) public view returns (uint256)；
 // 查询解锁具体信息
 function userUnstakeInfo(address _user, uint256 _index) external;
 
+//用户调用 stake(0)是领取奖励(单币质押的奖励)
+
 参考：
 
 
