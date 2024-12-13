@@ -1,11 +1,17 @@
 package com.taibiex.stakingservice.service;
 
 import com.taibiex.stakingservice.common.chain.contract.utils.CustomBeanUtils;
+import com.taibiex.stakingservice.entity.ActivityUser;
 import com.taibiex.stakingservice.entity.LiquidityEvent;
+import com.taibiex.stakingservice.entity.RewardPool;
 import com.taibiex.stakingservice.repository.LiquidityEventRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -13,8 +19,24 @@ public class LiquidityEventService {
 
     private final LiquidityEventRepository liquidityEventRepository;
 
-    public LiquidityEventService(LiquidityEventRepository liquidityEventRepository) {
+    private final UserStakingInfoService userStakingInfoService;
+
+    private final TickRangeStakingInfoService tickRangeStakingInfoService;
+
+    private final ActivityUserService activityUserService;
+
+    private final RewardPoolService rewardPoolService;
+
+    public LiquidityEventService(LiquidityEventRepository liquidityEventRepository,
+                                 UserStakingInfoService userStakingInfoService,
+                                 TickRangeStakingInfoService tickRangeStakingInfoService,
+                                 ActivityUserService activityUserService,
+                                 RewardPoolService rewardPoolService) {
         this.liquidityEventRepository = liquidityEventRepository;
+        this.userStakingInfoService = userStakingInfoService;
+        this.tickRangeStakingInfoService = tickRangeStakingInfoService;
+        this.activityUserService = activityUserService;
+        this.rewardPoolService = rewardPoolService;
     }
 
     @Transactional
@@ -36,6 +58,15 @@ public class LiquidityEventService {
             //return;
         }
 
-        liquidityEventRepository.save(liquidityEvent);
+        List<RewardPool> rewardPools = rewardPoolService.findAll();
+        Set<String> set = rewardPools.stream().map(RewardPool::getPool).collect(Collectors.toSet());
+        if (set.contains(liquidityEvent.getPool())){
+            liquidityEventRepository.save(liquidityEvent);
+            userStakingInfoService.liquidityEventHandler(liquidityEvent);
+            tickRangeStakingInfoService.liquidityEventHandler(liquidityEvent);
+            ActivityUser activityUser = new ActivityUser();
+            activityUser.setUserAddress(liquidityEvent.getOwner());
+            activityUserService.save(activityUser);
+        }
     }
 }

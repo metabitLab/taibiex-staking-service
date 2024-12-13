@@ -12,8 +12,8 @@ import lombok.Data;
 @Entity
 @Table(name = "user_pool_reward", indexes = {
         @Index(name = "user_idx", columnList = "user_address"),
-        @Index(name = "range_id_idx", columnList = "range_id"),
-        @Index(name = "pool_idx", columnList = "pool")
+        @Index(name = "pool_idx", columnList = "pool"),
+        @Index(name = "epoch_idx", columnList = "epoch")
 })
 @Data
 public class UserPoolReward extends BaseEntity{
@@ -24,10 +24,10 @@ public class UserPoolReward extends BaseEntity{
     @Column(name = "user_address", nullable = false, length = 100)
     private String userAddress;
 
-    @Column(name = "reward_amount", nullable = false, columnDefinition = "default 0")
+    @Column(name = "reward_amount", nullable = false, columnDefinition = " varchar(255) default '0'")
     private String rewardAmount;
 
-    @Column(name = "lp", nullable = false, length = 100, columnDefinition = "default 0")
+    @Column(name = "lp", nullable = false, length = 100, columnDefinition = " varchar(255) default '0'")
     private String lp;
 
     @Column(name = "pool", nullable = false, length = 100)

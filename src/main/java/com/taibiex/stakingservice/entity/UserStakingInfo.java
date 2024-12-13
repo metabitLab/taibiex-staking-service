@@ -42,7 +42,7 @@ public class UserStakingInfo extends BaseEntity{
     @Column(name = "total_amount1", nullable = false, length = 100)
     private String totalAmount1;
 
-    @Column(name = "staking_amount", nullable = false)
+    @Column(name = "staking_amount", nullable = false, columnDefinition = " varchar(255) default '0'")
     private String stakingAmount;
 
     @Comment("流动性池子的地址")
