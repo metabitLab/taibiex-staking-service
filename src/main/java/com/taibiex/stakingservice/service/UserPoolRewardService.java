@@ -2,6 +2,7 @@ package com.taibiex.stakingservice.service;
 
 import com.taibiex.stakingservice.common.utils.EpochUtil;
 import com.taibiex.stakingservice.common.utils.RedisService;
+import com.taibiex.stakingservice.dto.UserRewardDTO;
 import com.taibiex.stakingservice.entity.*;
 import com.taibiex.stakingservice.repository.ActivityUserRepository;
 import com.taibiex.stakingservice.repository.UserPoolRewardRepository;
@@ -10,8 +11,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.math.BigInteger;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Log4j2
 @Service
@@ -55,7 +55,7 @@ public class UserPoolRewardService {
     @Scheduled(fixedDelayString = "60000")
     public void generateUserPoolReward() {
         try {
-            if (!redisService.setNx(USER_POOL_REWARD_LOCK_KEY, USER_POOL_REWARD_LOCK_KEY + System.currentTimeMillis())) {
+            if (!redisService.setNx(USER_POOL_REWARD_LOCK_KEY, USER_POOL_REWARD_LOCK_KEY + "_LOCK" )) {
                 log.warn("UserPoolRewardService generateUserPoolReward locked");
                 return;
             }
@@ -109,7 +109,6 @@ public class UserPoolRewardService {
                     userPoolReward.setTokenSymbol("1");
                     userPoolReward.setTokenSymbol(epochRewardConfig.getTokenSymbol());
                     userPoolReward.setTokenAddress(epochRewardConfig.getTokenAddress());
-                    userPoolReward.setMainNet(epochRewardConfig.isMainNet());
                     userPoolRewardRepository.save(userPoolReward);
                 }
             }
@@ -120,8 +119,33 @@ public class UserPoolRewardService {
         }
     }
 
-    public List<UserPoolReward> getUserPoolRewards(String userAddress) {
-        return userPoolRewardRepository.findByUserAddressOrderByEpochDesc(userAddress);
+    public List<UserRewardDTO> getUserPoolRewards(String userAddress) {
+        EpochRewardConfig epochRewardConfig = epochRewardConfigService.getEpochRewardConfig();
+        String epochRewardAmount = epochRewardConfig.getRewardAmount();
+        Map<Long, UserRewardDTO> userPoolRewardMap = new HashMap<>();
+        List<UserPoolReward> userPoolRewards = userPoolRewardRepository.findByUserAddressOrderByEpochDesc(userAddress);
+        for (UserPoolReward userPoolReward : userPoolRewards) {
+            long epoch = userPoolReward.getEpoch();
+            UserRewardDTO userRewardDTO = userPoolRewardMap.get(epoch);
+            if (userRewardDTO == null) {
+                userRewardDTO = new UserRewardDTO();
+                userRewardDTO.setUserAddress(userPoolReward.getUserAddress());
+                userRewardDTO.setEpoch(epoch);
+                userRewardDTO.setEpochRewardAmount(epochRewardAmount);
+                userRewardDTO.setTokenSymbol(userPoolReward.getTokenSymbol());
+                userRewardDTO.setTokenAddress(userPoolReward.getTokenAddress());
+                userRewardDTO.setClaimed(userPoolReward.isClaimed());
+                userRewardDTO.setLp(userPoolReward.getLp());
+                userRewardDTO.setRewardAmount(userPoolReward.getRewardAmount());
+                userPoolRewardMap.put(epoch, userRewardDTO);
+            } else {
+                userRewardDTO.setRewardAmount(new BigInteger(userRewardDTO.getRewardAmount()).add(new BigInteger(userPoolReward.getRewardAmount())).toString());
+                userRewardDTO.setLp(new BigInteger(userRewardDTO.getLp()).add(new BigInteger(userPoolReward.getLp())).toString());
+            }
+        }
+        List<UserRewardDTO> list = new ArrayList<>(userPoolRewardMap.values().stream().toList());
+        list.sort(Comparator.comparingLong(UserRewardDTO::getEpoch).reversed());
+        return list;
     }
 
 }
