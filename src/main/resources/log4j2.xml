@@ -3,7 +3,7 @@
 
     <Properties>
         <Property name="LOG_HOME">logs</Property>
-        <Property name="PROJECT_HOME">cream-stream</Property>
+        <Property name="PROJECT_HOME">taibiex-staking-service</Property>
     </Properties>
 
     <Appenders>
