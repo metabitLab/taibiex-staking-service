@@ -1,13 +1,17 @@
 package com.taibiex.stakingservice.service;
 
+import com.taibiex.stakingservice.dto.ClaimStakingDTO;
 import com.taibiex.stakingservice.entity.ClaimEvent;
-import com.taibiex.stakingservice.entity.SPStaking;
+import com.taibiex.stakingservice.entity.ClaimEvent;
 import com.taibiex.stakingservice.repository.ClaimRepository;
-import com.taibiex.stakingservice.repository.SpStakingRepository;
 import jakarta.annotation.Resource;
+import jakarta.persistence.criteria.Predicate;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 /**
  * claim是领取解锁的token，不是领取奖励. claim那个得等7天才能解锁才能claim
@@ -32,5 +36,31 @@ public class ClaimService {
         }
 
         claimRepository.save(claimEvent);
+    }
+
+
+    /**
+     * 获取已领取(已解锁本金的)的claim列表
+     */
+    public Page<ClaimEvent> getClaimedList(ClaimStakingDTO claimStakingDTO){
+        Specification<ClaimEvent> specification = (root, query, criteriaBuilder) -> {
+            Predicate predicate = criteriaBuilder.conjunction();
+            if (StringUtils.hasLength(claimStakingDTO.getTxHash())) {
+                predicate = criteriaBuilder.and(predicate, criteriaBuilder.equal(root.get("txHash"), claimStakingDTO.getTxHash()));
+            }
+            if (StringUtils.hasLength(claimStakingDTO.getUserAddress())) {
+                predicate = criteriaBuilder.and(predicate, criteriaBuilder.equal(root.get("userAddress"), claimStakingDTO.getUserAddress()));
+            }
+
+            if (StringUtils.hasLength(claimStakingDTO.getClaimIndex())) {
+                predicate = criteriaBuilder.and(predicate, criteriaBuilder.equal(root.get("claimIndex"), claimStakingDTO.getClaimIndex() ));
+            }
+            return predicate;
+        };
+        Page<ClaimEvent> actorPage = claimRepository.findAll(specification, claimStakingDTO.getPageable());
+        //log.info("分页查询第:[{}]页,pageSize:[{}],共有:[{}]数据,共有:[{}]页", claimStakingDTO.getPageNumber(), claimStakingDTO.getPageablePageSize(), actorPage.getTotalElements(), actorPage.getTotalPages());
+        //List<ClaimEvent> stakingListBySpecification = actorPage.getContent();
+
+        return actorPage;
     }
 }

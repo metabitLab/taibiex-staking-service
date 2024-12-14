@@ -17,9 +17,7 @@ import lombok.NoArgsConstructor;
 @Entity
 @Table(name = "claim_staking", indexes = {
         @Index(name = "user_idx", columnList = "user"),
-        @Index(name = "type_idx", columnList = "type"),
         @Index(name = "tx_hash_idx", columnList = "tx_hash"),
-        @Index(name = "unlock_block_idx", columnList = "unlock_block"),
         @Index(name = "user_tx_hash_index_idx", columnList = "tx_hash, user, index", unique = true),
 })
 
