@@ -18,7 +18,8 @@ import lombok.NoArgsConstructor;
 @Table(name = "claim_staking", indexes = {
         @Index(name = "user_idx", columnList = "user"),
         @Index(name = "tx_hash_idx", columnList = "tx_hash"),
-        @Index(name = "user_tx_hash_index_idx", columnList = "tx_hash, user, index", unique = true),
+        @Index(name = "claim_index_idx", columnList = "claim_index"),
+        @Index(name = "user_tx_hash_index_idx", columnList = "tx_hash, user, claim_index", unique = true),
 })
 
 @Data
@@ -35,8 +36,8 @@ public class ClaimEvent extends BaseEntity{
     @Column(name = "amount", nullable = false, length = 100)
     private String amount;
 
-    @Comment("claim单笔解质押时的索引，为 空字符串时 表示一笔claim所有")
-    @Column(name = "`index`", nullable = false,columnDefinition = "varchar(64) default ''")
+    @Comment("为 空字符串或null时，表示 表示一笔claim之前所有已解质押并且已解锁的奖励。 有值时，表示claim的单笔已解质押已解锁的奖励")
+    @Column(name = "`claim_index`", nullable = false, columnDefinition = "varchar(64) default ''")
     private  String claimIndex;
 }
 
