@@ -1,5 +1,7 @@
 package com.taibiex.stakingservice.service;
 
+import com.taibiex.stakingservice.common.constant.ResultEnum;
+import com.taibiex.stakingservice.common.exception.AppWebException;
 import com.taibiex.stakingservice.common.utils.EpochUtil;
 import com.taibiex.stakingservice.common.utils.RedisService;
 import com.taibiex.stakingservice.dto.UserRewardDTO;
@@ -7,6 +9,10 @@ import com.taibiex.stakingservice.entity.*;
 import com.taibiex.stakingservice.repository.ActivityUserRepository;
 import com.taibiex.stakingservice.repository.UserPoolRewardRepository;
 import lombok.extern.log4j.Log4j2;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
@@ -105,10 +111,9 @@ public class UserPoolRewardService {
                     userPoolReward.setRewardAmount(rewardAmount.toString());
                     userPoolReward.setLp(totalAmount.toString());
                     userPoolReward.setClaimed(false);
-                    userPoolReward.setTokenAddress("1");
-                    userPoolReward.setTokenSymbol("1");
                     userPoolReward.setTokenSymbol(epochRewardConfig.getTokenSymbol());
                     userPoolReward.setTokenAddress(epochRewardConfig.getTokenAddress());
+                    userPoolReward.setMainNet(epochRewardConfig.isMainNet());
                     userPoolRewardRepository.save(userPoolReward);
                 }
             }
@@ -119,13 +124,23 @@ public class UserPoolRewardService {
         }
     }
 
-    public List<UserRewardDTO> getUserPoolRewards(String userAddress) {
-        EpochRewardConfig epochRewardConfig = epochRewardConfigService.getEpochRewardConfig();
-        String epochRewardAmount = epochRewardConfig.getRewardAmount();
+    public Page<UserRewardDTO> getUserPoolRewards(String userAddress, Integer pageNumber, Integer pageSize) {
+        Pageable pageable = PageRequest.of(pageNumber, pageSize);
+        List<Long> epochList = userPoolRewardRepository.findEpochByUserAddressOrderByEpochDesc(userAddress);
+        if (epochList.isEmpty()){
+            return Page.empty(pageable);
+        }
+        int fromIndex = (pageNumber - 1) * pageSize;
+        if (fromIndex >= epochList.size()){
+            throw new AppWebException(ResultEnum.ERROR_PARAMS.getCode(), "pageNumber:" + pageNumber + " is out of range");
+        }
+        List<Long> epochs = epochList.subList(fromIndex, Math.min(epochList.size(), fromIndex + pageSize));
         Map<Long, UserRewardDTO> userPoolRewardMap = new HashMap<>();
-        List<UserPoolReward> userPoolRewards = userPoolRewardRepository.findByUserAddressOrderByEpochDesc(userAddress);
+        List<UserPoolReward> userPoolRewards = userPoolRewardRepository.findAllByUserAddressAndEpochInOrderByEpochDesc(userAddress, epochs);
         for (UserPoolReward userPoolReward : userPoolRewards) {
             long epoch = userPoolReward.getEpoch();
+            EpochRewardConfig epochRewardConfig = epochRewardConfigService.getEpochRewardConfigByEpoch(epoch);
+            String epochRewardAmount = epochRewardConfig.getRewardAmount();
             UserRewardDTO userRewardDTO = userPoolRewardMap.get(epoch);
             if (userRewardDTO == null) {
                 userRewardDTO = new UserRewardDTO();
@@ -145,7 +160,26 @@ public class UserPoolRewardService {
         }
         List<UserRewardDTO> list = new ArrayList<>(userPoolRewardMap.values().stream().toList());
         list.sort(Comparator.comparingLong(UserRewardDTO::getEpoch).reversed());
-        return list;
+        return new PageImpl<>(list, pageable, epochList.size());
+    }
+
+    public Map<String, String> getTotalReward(String userAddress){
+        long lastEpoch = epochUtil.getLastEpoch();
+        List<UserPoolReward> userPoolRewards = userPoolRewardRepository.findByUserAddressOrderByEpochDesc(userAddress);
+        Map<String, String> map = new HashMap<>();
+        BigInteger totalReward = BigInteger.ZERO;
+        BigInteger totalLp = BigInteger.ZERO;
+        BigInteger lastEpochReward = BigInteger.ZERO;
+        for (UserPoolReward userPoolReward : userPoolRewards) {
+            totalReward = totalReward.add(new BigInteger(userPoolReward.getRewardAmount()));
+            totalLp = totalLp.add(new BigInteger(userPoolReward.getLp()));
+            if (userPoolReward.getEpoch() == lastEpoch){
+                lastEpochReward = lastEpochReward.add(new BigInteger(userPoolReward.getRewardAmount()));
+            }
+        }
+        map.put("totalAmountEarned", totalReward.toString());
+        map.put("tvl", totalLp.toString());
+        return map;
     }
 
 }
