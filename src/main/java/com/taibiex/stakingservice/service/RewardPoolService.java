@@ -96,7 +96,7 @@ public class RewardPoolService {
             //注意 pool address  是根据 token0, token1, fee 生成，所以不用单独再过滤fee
             if (StringUtils.equalsIgnoreCase(_poolAddress, poolAddress)) {
                 for (int j = 0; j < rewardPoolTickRanges.size(); j++) {
-                    RewardPoolTickRange rewardPoolTickRange = rewardPoolTickRanges.get(i);
+                    RewardPoolTickRange rewardPoolTickRange = rewardPoolTickRanges.get(j);
                     String _poolAddress1 = rewardPoolTickRange.getPool();
                     if (!StringUtils.equalsIgnoreCase(_poolAddress1, poolAddress)) {
                         continue;
