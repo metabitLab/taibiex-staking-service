@@ -149,6 +149,15 @@ public class Web3jUtils {
         return web3j.ethGetLogs(filter).send();
     }
 
+    public EthLog filterEthLog(DefaultBlockParameter startBlock, DefaultBlockParameter endBlock, Event event, String contractAddress) throws IOException {
+
+        org.web3j.protocol.core.methods.request.EthFilter filter = new org.web3j.protocol.core.methods.request.EthFilter(startBlock, endBlock, contractAddress);
+        String topic = EventEncoder.encode(event);
+        logger.info(" ==========> filterEthLog topic {}", topic);
+        filter.addSingleTopic(topic);
+        return web3j.ethGetLogs(filter).send();
+    }
+
     /**
      * Retrieve Ethereum event logs
      *

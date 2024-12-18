@@ -152,6 +152,30 @@ function userUnstakeInfo(address _user, uint256 _index) external;
 
 参考：
 
+uniswapV3 中 移除流动性会不会销毁 NonfungiblePositionManager中的token
+
+
+Assistant
+
+
+在 Uniswap V3 中，移除流动性不会直接销毁 NonfungiblePositionManager 中的 token，但会涉及到一些特定的步骤和状态变化。以下是详细说明：
+
+1. 流动性和 NFT 代币
+在 Uniswap V3 中，每个流动性位置由一个 ERC-721 NFT 表示，称为流动性 NFT。每个 NFT 代表用户在特定池中的流动性位置，包括其流动性、上下限 tick 和其他信息。
+
+2. 移除流动性
+当用户选择移除流动性时，以下步骤会发生：
+
+调用移除流动性的方法：用户会调用 NonfungiblePositionManager 合约中的 decreaseLiquidity 方法，指定要移除的流动性数量和其他参数。
+更新流动性状态：合约会根据用户提供的参数，更新流动性位置的信息，比如减少流动性。
+返回代币：移除流动性后，用户会收到相应的代币（例如，ETH 和 ERC-20 代币），这些代币是根据用户在该流动性位置的份额计算的。
+3. NFT 代币的状态
+保留 NFT：在流动性移除后，用户的 NFT 不会被销毁。用户仍然拥有该 NFT，尽管它的流动性可能会变为零。
+销毁条件：只有在用户明确调用 burn 方法时，NFT 才会被销毁。这通常是在用户决定不再需要该 NFT 时进行的。
+小结
+在 Uniswap V3 中，移除流动性会更新流动性位置的状态，但不会自动销毁与该位置关联的 NFT。用户仍然可以保留或销毁该 NFT，具体取决于其需求。如果您有其他问题或需要更多帮助，请随时询问！
+
+
 
 通过NonfungiblePositionManager 合约添加的流动性，可以获取到对应的pool地址吗？
 

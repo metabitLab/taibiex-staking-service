@@ -1,10 +1,17 @@
 package com.taibiex.stakingservice.entity;
 
+import com.taibiex.stakingservice.common.chain.contract.listener.filter.events.ContractsEventEnum;
+import com.taibiex.stakingservice.common.chain.contract.listener.filter.events.consumer.MintEventHandler;
+import com.taibiex.stakingservice.common.chain.contract.listener.filter.events.impl.ContractsEventBuilder;
 import com.taibiex.stakingservice.common.hibernate.Comment;
+import com.taibiex.stakingservice.config.ContractsConfig;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.web3j.abi.EventEncoder;
+import org.web3j.abi.datatypes.Event;
+import org.web3j.protocol.core.methods.response.Log;
 
 import java.math.BigInteger;
 
@@ -70,4 +77,5 @@ public class RewardPoolTickRange extends BaseEntity{
     {
         return Math.pow(1.0001, tick);
     }
+
 }
