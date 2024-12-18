@@ -64,7 +64,7 @@ public class RewardPoolTickRange extends BaseEntity{
      */
     @ManyToOne(fetch = FetchType.EAGER) //https://blog.csdn.net/qq_43618881/article/details/105214416
     //JoinColumn 指定外键列：nullable = true 表示在 RewardPoolTickRange 表中有一个 reward_pool_id 列，但不在数据库中强制执行外键约束
-    @JoinColumn(name = "reward_pool_id", nullable = true) // 允许为 null
+    @JoinColumn(name = "reward_pool_id", nullable = true, foreignKey = @ForeignKey(value = ConstraintMode.NO_CONSTRAINT)) // 允许为 null
     private RewardPool rewardPool;
 
 
