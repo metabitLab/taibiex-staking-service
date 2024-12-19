@@ -50,10 +50,10 @@ public class RewardPoolTickRange extends BaseEntity {
 
     /**
      * 在
-     *
-     * @JoinColumn(name = "reward_pool_id") 指定外键列的名称，表示在 RewardPoolTickRange 表中存储 RewardPool 的 ID。
-     * name 属性的值应该与数据库中对应的外键列的名称完全匹配。如果数据库中外键列的名称是 reward_pool_id，
-     * 那么在 @JoinColumn 中 name 属性也应该设置为 "reward_pool_id"。
+     * @JoinColumn(name = "reward_pool_id", referencedColumnName = "id") 指定外键列的名称，表示在 RewardPoolTickRange 表中关联 RewardPool 的 id字段。
+    name 属性的值应该与数据库中对应的外键列的名称完全匹配。如果数据库中外键列的名称是 reward_pool_id，
+    那么在 @JoinColumn 中 name 指定本表中列名(类似于本表中类似于外键的字段reward_pool_id， 需要关联RewardPool中id的字段)
+    这个字段reward_pool_id(类似于外键)在这个Entity中可以没有这个列(也可以定义一个这个列@Column)，但是数据库中reward_pools_tick_range_config表会生成  `reward_pool_id` bigint(20) NOT NULL
      */
     @ManyToOne(fetch = FetchType.EAGER) //https://blog.csdn.net/qq_43618881/article/details/105214416
     //JoinColumn 指定外键列：nullable = true 表示在 RewardPoolTickRange 表中有一个 reward_pool_id 列，但不在数据库中强制执行外键约束
