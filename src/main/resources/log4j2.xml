@@ -8,7 +8,7 @@
 
     <Appenders>
         <Console name="Console" target="SYSTEM_OUT">
-            <PatternLayout pattern="%d{ISO8601}|#|%p|#|%pid{[defaultValue]}|#|%t|#|%logger{39}.%method:%L|#|%msg%n"/>
+            <PatternLayout pattern="%d{yyyy-Mm-dd HH:mm:ss.sss} %highlight{%-5level} [%t] %highlight{%c{1.}.%M(%L)}: %msg%n"/>
         </Console>
         <RollingFile name="RollingFile" fileName="${LOG_HOME}/${PROJECT_HOME}.log"
                      filePattern="${LOG_HOME}/${PROJECT_HOME}.%d{yyyy-MM-dd}.%i.log.gz">

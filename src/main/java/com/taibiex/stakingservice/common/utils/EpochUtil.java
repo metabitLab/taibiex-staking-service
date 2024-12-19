@@ -52,7 +52,7 @@ public class EpochUtil {
      * 获取epoch的开始时间
      */
     public long getEpochStartTime(long epoch) {
-        return Long.parseLong(startTimestamp) + epoch * Long.parseLong(epochUnit);
+        return Long.parseLong(startTimestamp) + (epoch - 1) * Long.parseLong(epochUnit);
     }
 
     /**

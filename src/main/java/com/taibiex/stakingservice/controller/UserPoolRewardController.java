@@ -39,6 +39,11 @@ public class UserPoolRewardController {
         return ResponseResult.success(userPoolRewardService.getTotalReward(userAddress));
     }
 
+    @GetMapping("checkClaimable")
+    public ResponseResult checkClaimable(String userAddress) {
+        return ResponseResult.success(userPoolRewardService.checkClaimable(userAddress));
+    }
+
     @PostMapping("claim")
     public ResponseResult claim(@RequestBody ClaimRequestDTO claimRequestDTO) {
         try {

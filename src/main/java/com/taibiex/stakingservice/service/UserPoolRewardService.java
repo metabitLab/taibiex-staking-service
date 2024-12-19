@@ -15,6 +15,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigInteger;
 import java.util.*;
@@ -59,6 +60,7 @@ public class UserPoolRewardService {
     }
 
     @Scheduled(fixedDelayString = "60000")
+    @Transactional
     public void generateUserPoolReward() {
         try {
             if (!redisService.setNx(USER_POOL_REWARD_LOCK_KEY, USER_POOL_REWARD_LOCK_KEY + "_LOCK" )) {
@@ -83,7 +85,9 @@ public class UserPoolRewardService {
                     BigInteger totalAmount1 = BigInteger.ZERO;
                     BigInteger totalStakingAmount = BigInteger.ZERO;
                     String pool = rewardPool.getPool();
+                    //获取每个区间的奖励金额
                     Map<Long, BigInteger> poolTickRewardRatioMap = rewardPoolService.getPoolTickRewardRatioMap(pool);
+
                     Map<Long, TickRangeStakingInfo> stakingInfoMapByEpoch = tickRangeStakingInfoService.getTickRangeStakingInfoMapByEpoch(lastEpoch, pool);
                     List<UserStakingInfo> userStakingInfos = userStakingInfoService.getUserStakingInfosByEpoch(lastEpoch, userAddress, pool);
                     for (UserStakingInfo userStakingInfo : userStakingInfos) {
@@ -125,7 +129,7 @@ public class UserPoolRewardService {
     }
 
     public Page<UserRewardDTO> getUserPoolRewards(String userAddress, Integer pageNumber, Integer pageSize) {
-        Pageable pageable = PageRequest.of(pageNumber, pageSize);
+        Pageable pageable = PageRequest.of(pageNumber - 1, pageSize);
         List<Long> epochList = userPoolRewardRepository.findEpochByUserAddressOrderByEpochDesc(userAddress);
         if (epochList.isEmpty()){
             return Page.empty(pageable);
@@ -180,6 +184,19 @@ public class UserPoolRewardService {
         map.put("totalAmountEarned", totalReward.toString());
         map.put("tvl", totalLp.toString());
         return map;
+    }
+
+    public boolean checkClaimable(String userAddress) {
+        List<UserPoolReward> claimed = userPoolRewardRepository.findByUserAddressAndClaimed(userAddress, false);
+        if (claimed.isEmpty()){
+            return false;
+        }
+        for (UserPoolReward poolReward : claimed) {
+            if (new BigInteger(poolReward.getRewardAmount()).compareTo(BigInteger.ZERO) > 0){
+                return true;
+            }
+        }
+        return false;
     }
 
 }

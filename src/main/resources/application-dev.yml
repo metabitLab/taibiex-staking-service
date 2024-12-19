@@ -1,5 +1,5 @@
 server:
-  port: 8092
+  port: 8804
 spring:
   data:
     redis:
@@ -13,6 +13,7 @@ spring:
     url: jdbc:mysql://127.0.0.1:3306/taibiex_staking?useUnicode=true&characterEncoding=utf-8&zeroDateTimeBehavior=convertToNull&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
     username: root
     password: 123456
+    #password: tabi@2024
     hikari:
       minimum-idle: 5
       idle-timeout: 600000
