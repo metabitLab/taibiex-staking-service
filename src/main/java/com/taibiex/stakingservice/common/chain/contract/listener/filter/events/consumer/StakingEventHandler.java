@@ -61,7 +61,7 @@ public class StakingEventHandler {
         List<String> topics = evLog.getTopics();
 
         String stakingPoolContractAddress = evLog.getAddress();
-        //0x06CB38541B139E24b2e95c88c9195BC8e4cA5774
+        //0xB9f2218e03cF0753e2FEE2A1B6B5718a12b42E4b
 
         String userAddress = EthLogsParser.hexToAddress(topics.get(1));
 
@@ -90,6 +90,9 @@ public class StakingEventHandler {
         spStaking.setType((short) 1);
         //解除质押后，需要等到这个块才能解锁(claim), 质押时，该字段为空字符串''
         spStaking.setUnlockBlock("");
+        spStaking.setClaimed(false);
+        //type为0时有效，对应claim事件的claimIndex,表示如果claim过奖励，对应的是这笔unstake记录
+        spStaking.setClaimIndex("");
         spStakingService.save(spStaking);
 
     }
@@ -107,13 +110,16 @@ public class StakingEventHandler {
         List<String> topics = evLog.getTopics();
 
         String stakingPoolContractAddress = evLog.getAddress();
-        //0x06CB38541B139E24b2e95c88c9195BC8e4cA5774
+        //0xB9f2218e03cF0753e2FEE2A1B6B5718a12b42E4b
 
         String userAddress = EthLogsParser.hexToAddress(topics.get(1));
 
-        String unStakingAmount = args.get(0).getValue().toString();
+        //对应claim事件的ClaimIndex
+        String index = args.get(0).getValue().toString();
 
-        String unlockBlock = args.get(1).getValue().toString();
+        String unStakingAmount = args.get(1).getValue().toString();
+
+        String unlockBlock = args.get(2).getValue().toString();
 
         SPStaking spStaking = new SPStaking();
 
@@ -129,6 +135,10 @@ public class StakingEventHandler {
 
         //质押类型: 1.质押  0.解除质押"
         spStaking.setType((short) 0);
+        //type为0时有效，表示奖励是否已经claim了
+        spStaking.setClaimed(false);
+        //type为0时有效，claimIndex对应claim事件的claimIndex,表示如果claim过奖励，对应的是这笔unstake记录
+        spStaking.setClaimIndex(index);
 
         spStakingService.save(spStaking);
 

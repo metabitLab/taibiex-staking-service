@@ -117,10 +117,8 @@ pool start1 end1  amount 池子地址关联
 
 https://www.figma.com/design/cutcMUAgwWoUCkaukGDWha/NinjaX?node-id=3-2&node-type=canvas&t=WdXLEQjdYAexWW2f-0
 
-
-stake: 0x8ee943778a27724d2a04658d115199cd6ad33291c2533f4511a526833f18c6b1
-stake领取奖励: 0xc7a1d1e6d39d0c0ac661cb9101a996be17c2c67e2bfde6cd72a18674dcff07cb
-unstake: 0x5d8a1d5090a994fa8eab0982b2b90b986d69375c973fcb6a3459618d19229e01
+Claim事件:https://testnetv2.tabiscan.com/tx/0x06649d4c99da603e91f477a9333b72a514ed174555077997525e4a558d7feed7?tab=logs
+ClaimIndex事件:https://testnetv2.tabiscan.com/tx/0x4e71b36d6cc103472a8e6591f2d990cc5642155a171058f93c9e9868f6d72d5c?tab=logs
 
 
 // 设置奖励分发池

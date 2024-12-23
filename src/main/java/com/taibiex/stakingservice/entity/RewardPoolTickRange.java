@@ -16,7 +16,9 @@ import java.math.BigInteger;
 @Entity
 @Table(name = "reward_pools_tick_range_config", indexes = {
         @Index(name = "pool_idx", columnList = "pool"),
-        @Index(name = "pool_tick_idx", columnList = "pool, tick_lower, tick_upper, reward_ratio", unique = true)
+        @Index(name = "pool_tick_idx", columnList = "pool, tick_lower, tick_upper, reward_ratio", unique = true),
+        @Index(name = "create_time_idx", columnList = "create_time"),
+        @Index(name = "last_update_time_idx", columnList = "last_update_time")
 })
 @Data
 @AllArgsConstructor

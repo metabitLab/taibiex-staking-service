@@ -13,7 +13,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+import java.util.Arrays;
+import java.util.List;
+
 /**
+ * 单币质押领取记录
  * claim是领取解锁的token，不是领取奖励. claim那个得等7天才能解锁才能claim
  * claim是一次性领取所有解锁了的本金，claimIndex是选定哪一期解锁. 和奖励没关系
  * (已解锁的)解质押事件(一笔提取所有的解质押事件) 或 提取某一笔质押事件
@@ -24,6 +28,9 @@ public class ClaimService {
 
     @Resource
     private ClaimRepository claimRepository;
+
+    @Resource
+    private SpStakingService spStakingService;
 
     @Transactional
     public void save(ClaimEvent claimEvent) {
@@ -38,6 +45,32 @@ public class ClaimService {
         claimRepository.save(claimEvent);
     }
 
+
+    @Transactional
+    public void userClaimHandler(ClaimEvent claimEvent) {
+
+        this.save(claimEvent);
+
+        String claimIndexListString = claimEvent.getClaimIndex();
+        // 使用 String.split 将逗号连接的字符串转换为 List<String>
+        List<String> claimIndexList = Arrays.asList(claimIndexListString.split(","));
+        //更新Ustake表的claimed字段
+        spStakingService.updateUnStakeInfoByClaimIndexList(claimIndexList);
+    }
+
+    @Transactional
+    public void userClaimIndexHandler(ClaimEvent claimEvent) {
+
+        this.save(claimEvent);
+
+
+        String claimIndex = claimEvent.getClaimIndex();
+
+        // 使用 String.split 将逗号连接的字符串转换为 List<String>
+        List<String> claimIndexList = Arrays.asList(claimIndex.split(","));
+        //更新Ustake表的claimed字段
+        spStakingService.updateUnStakeInfoByClaimIndexList(claimIndexList);
+    }
 
     /**
      * 获取已领取(已解锁本金的)的claim列表

@@ -26,6 +26,9 @@ import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
+/**
+ * 添加流动性(多币质押)的奖励领取记录
+ */
 @Log4j2
 @Service
 public class ClaimRecordService {

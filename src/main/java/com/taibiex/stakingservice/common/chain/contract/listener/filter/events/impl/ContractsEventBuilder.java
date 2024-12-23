@@ -297,6 +297,8 @@ public class ContractsEventBuilder implements EventBuilder<ContractsEventEnum> {
                 Arrays.<TypeReference<?>>asList(
                         new TypeReference<Address>(true) {//address
                         },
+                        new TypeReference<Uint256>(false) { //index
+                        },
                         new TypeReference<Uint256>(false) { //amount
                         },
                         new TypeReference<Uint256>(false) { //unlockBlock
@@ -309,6 +311,8 @@ public class ContractsEventBuilder implements EventBuilder<ContractsEventEnum> {
         //event Unstake(address indexed user, uint256 amount0, uint256 unlockBlock)
         Event event = new Event("Unstake",
                 Arrays.<TypeReference<?>>asList(
+                        new TypeReference<Uint256>(false) { //index
+                        },
                         new TypeReference<Uint256>(false) { //amount
                         },
                         new TypeReference<Uint256>(false) { //unlockBlock
@@ -318,10 +322,12 @@ public class ContractsEventBuilder implements EventBuilder<ContractsEventEnum> {
     }
 
     private Event getClaimEvent() {
-        //event Claim(address indexed user, uint256 amount0)
+        //event Claim(address indexed user, uint256[] indexList, uint256 amount);
         Event event = new Event("Claim",
                 Arrays.<TypeReference<?>>asList(
                         new TypeReference<Address>(true) {//address
+                        },
+                        new TypeReference<DynamicArray<Uint256>>(false) { //indexList
                         },
                         new TypeReference<Uint256>(false) { //amount
                         }
@@ -333,6 +339,8 @@ public class ContractsEventBuilder implements EventBuilder<ContractsEventEnum> {
         //event Claim(address indexed user, uint256 amount0)
         Event event = new Event("Claim",
                 Arrays.<TypeReference<?>>asList(
+                        new TypeReference<DynamicArray<Uint256>>(false) { //indexList
+                        },
                         new TypeReference<Uint256>(false) { //amount
                         }
                 ));

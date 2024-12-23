@@ -22,6 +22,8 @@ import lombok.NoArgsConstructor;
         @Index(name = "tick_upper_idx", columnList = "tick_upper"),
         @Index(name = "type_idx", columnList = "type"),
         @Index(name = "tx_hash_type_idx", columnList = "tx_hash,type", unique = true),
+        @Index(name = "create_time_idx", columnList = "create_time"),
+        @Index(name = "last_update_time_idx", columnList = "last_update_time")
 })
 
 @Data

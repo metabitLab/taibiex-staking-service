@@ -13,7 +13,9 @@ import lombok.Data;
 @Table(name = "user_pool_reward", indexes = {
         @Index(name = "user_idx", columnList = "user_address"),
         @Index(name = "pool_idx", columnList = "pool"),
-        @Index(name = "epoch_idx", columnList = "epoch")
+        @Index(name = "epoch_idx", columnList = "epoch"),
+        @Index(name = "create_time_idx", columnList = "create_time"),
+        @Index(name = "last_update_time_idx", columnList = "last_update_time")
 })
 @Data
 public class UserPoolReward extends BaseEntity{

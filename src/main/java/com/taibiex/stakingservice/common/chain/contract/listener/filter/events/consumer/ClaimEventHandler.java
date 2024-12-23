@@ -4,6 +4,7 @@ import com.taibiex.stakingservice.common.chain.contract.listener.filter.events.C
 import com.taibiex.stakingservice.common.chain.contract.listener.filter.events.impl.ContractsEventBuilder;
 import com.taibiex.stakingservice.common.chain.contract.utils.EthLogsParser;
 import com.taibiex.stakingservice.common.chain.contract.utils.Web3jUtils;
+import com.taibiex.stakingservice.common.utils.HashUtil;
 import com.taibiex.stakingservice.config.ContractsConfig;
 import com.taibiex.stakingservice.entity.ClaimEvent;
 import com.taibiex.stakingservice.service.ClaimService;
@@ -13,11 +14,14 @@ import org.springframework.stereotype.Component;
 import org.web3j.abi.FunctionReturnDecoder;
 import org.web3j.abi.datatypes.Event;
 import org.web3j.abi.datatypes.Type;
+import org.web3j.abi.datatypes.generated.Uint256;
 import org.web3j.protocol.core.methods.response.Log;
 
 import java.io.IOException;
 import java.sql.Timestamp;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * claim是领取解锁的token，不是领取奖励. claim那个得等7天才能解锁才能claim
@@ -53,11 +57,14 @@ public class ClaimEventHandler {
         List<String> topics = evLog.getTopics();
 
         String stakingPoolContractAddress = evLog.getAddress();
-        //0x06CB38541B139E24b2e95c88c9195BC8e4cA5774
+        //0xB9f2218e03cF0753e2FEE2A1B6B5718a12b42E4b
 
         String userAddress = EthLogsParser.hexToAddress(topics.get(1));
 
-        String stakingAmount = args.get(0).getValue().toString();
+        //List<String>  claimIndexLists = (List<String>) args.get(0).getValue();
+        ArrayList<String> claimIndexLists = (ArrayList<String>) ((List<Uint256>) args.get(0).getValue()).stream().map(landId -> landId.getValue().toString()).collect(Collectors.toList());
+
+        String stakingAmount = args.get(1).getValue().toString();
 
         ClaimEvent claimEvent = new ClaimEvent();
 
@@ -69,11 +76,14 @@ public class ClaimEventHandler {
         claimEvent.setLastUpdateTime(eventHappenedTimeStamp);
         claimEvent.setAmount(stakingAmount);
         claimEvent.setUserAddress(userAddress);
-        //claim单笔解质押时的索引，为 空字符串时 表示一笔claim所有
-        claimEvent.setClaimIndex("");
+        //为 ,连接的字符串 表示一笔claim之前所有已解质押并且已解锁的奖励。如:1,2,3 单个值时，表示claim的单笔已解质押已解锁的奖励, 如: 5
+        String claimIndexListString = String.join(",", claimIndexLists);
+        claimEvent.setClaimIndex(claimIndexListString);
+        //varchar 大于255就不让加索引了, 所以增加一个hash字段，主要是为了唯一索引使用, 值为claim_index的 SHA-256 哈希值
+        String hash = HashUtil.getSHA256Hash(claimIndexListString);
+        claimEvent.setClaimIndexHash(hash);
 
-        claimService.save(claimEvent);
-
+        claimService.userClaimHandler(claimEvent);
     }
 
     public static void descClaimIndexEvent(Log evLog) throws IOException {
@@ -89,7 +99,7 @@ public class ClaimEventHandler {
         List<String> topics = evLog.getTopics();
 
         String stakingPoolContractAddress = evLog.getAddress();
-        //0x06CB38541B139E24b2e95c88c9195BC8e4cA5774
+        //0xB9f2218e03cF0753e2FEE2A1B6B5718a12b42E4b
 
         String userAddress = EthLogsParser.hexToAddress(topics.get(1));
 
@@ -107,10 +117,12 @@ public class ClaimEventHandler {
         claimEvent.setLastUpdateTime(eventHappenedTimeStamp);
         claimEvent.setAmount(stakingAmount);
         claimEvent.setUserAddress(userAddress);
-        //claim单笔解质押时的索引，为 空字符串时 表示一笔claim所有
+        //为 ,连接的字符串 表示一笔claim之前所有已解质押并且已解锁的奖励。如:1,2,3 单个值时，表示claim的单笔已解质押已解锁的奖励, 如: 5
         claimEvent.setClaimIndex(claimIndex);
-
-        claimService.save(claimEvent);
+        //varchar 大于255就不让加索引了, 所以增加一个hash字段，主要是为了唯一索引使用, 值为claim_index的 SHA-256 哈希值
+        String hash = HashUtil.getSHA256Hash(claimIndex);
+        claimEvent.setClaimIndexHash(hash);
+        claimService.userClaimIndexHandler(claimEvent);
 
     }
 

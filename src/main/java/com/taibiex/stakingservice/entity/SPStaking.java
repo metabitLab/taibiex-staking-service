@@ -18,7 +18,11 @@ import lombok.NoArgsConstructor;
         @Index(name = "type_idx", columnList = "type"),
         @Index(name = "tx_hash_idx", columnList = "tx_hash"),
         @Index(name = "unlock_block_idx", columnList = "unlock_block"),
+        @Index(name = "claim_index_idx", columnList = "claim_index"),
+        @Index(name = "claimed_idx", columnList = "claimed"),
         @Index(name = "tx_hash_type_idx", columnList = "tx_hash, type", unique = true),
+        @Index(name = "create_time_idx", columnList = "create_time"),
+        @Index(name = "last_update_time_idx", columnList = "last_update_time")
 })
 
 @Data
@@ -42,5 +46,14 @@ public class SPStaking extends BaseEntity{
     @Comment("解除质押后，需要等到这个块才能解锁(claim), 质押时，该字段为空字符串''")
     @Column(name = "`unlock_block`", nullable = false)
     private  String unlockBlock;
+
+    @Comment("type为0时有效，表示奖励是否已经claim了")
+    @Column(name = "`claimed`", nullable = false, columnDefinition = "TINYINT(1) DEFAULT 0")
+    private  Boolean claimed;
+
+    @Comment("type为0时有效，claimIndex对应claim事件的claimIndex,表示如果claim过奖励，对应的是这笔unstake记录")
+    @Column(name = "`claim_index`", nullable = false, columnDefinition = "varchar(100) DEFAULT ''")
+    private  String claimIndex;
+
 }
 

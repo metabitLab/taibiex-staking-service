@@ -10,6 +10,8 @@ import lombok.Data;
 @Entity
 @Table(name = "claim_record", indexes = {
         @Index(name = "user_idx", columnList = "user_address"),
+        @Index(name = "create_time_idx", columnList = "create_time"),
+        @Index(name = "last_update_time_idx", columnList = "last_update_time")
 })
 public class ClaimRecord extends BaseEntity{
 

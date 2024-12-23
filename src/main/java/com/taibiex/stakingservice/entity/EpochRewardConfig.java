@@ -2,6 +2,7 @@ package com.taibiex.stakingservice.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.Index;
 import jakarta.persistence.Table;
 import lombok.Data;
 
@@ -9,6 +10,8 @@ import lombok.Data;
 @Entity
 @Table(name = "epoch_reward_config", indexes = {
         @jakarta.persistence.Index(name = "epoch_idx", columnList = "epoch"),
+        @Index(name = "create_time_idx", columnList = "create_time"),
+        @Index(name = "last_update_time_idx", columnList = "last_update_time")
 })
 public class EpochRewardConfig extends BaseEntity{
 

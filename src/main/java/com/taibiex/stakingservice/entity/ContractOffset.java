@@ -9,6 +9,8 @@ import java.sql.Timestamp;
 @Entity
 @Table(name = "contract_offset", indexes = {
         @Index(name = "contract_address_idx", columnList = "contract_address", unique = true),
+        @Index(name = "create_time_idx", columnList = "create_time"),
+        @Index(name = "last_update_time_idx", columnList = "last_update_time")
 })
 public class ContractOffset {
 

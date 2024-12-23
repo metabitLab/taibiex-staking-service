@@ -1,10 +1,12 @@
 package com.taibiex.stakingservice.service;
 
 
+import com.taibiex.stakingservice.common.hibernate.Comment;
 import com.taibiex.stakingservice.dto.SPStakingDTO;
 import com.taibiex.stakingservice.entity.SPStaking;
 import com.taibiex.stakingservice.repository.SpStakingRepository;
 import jakarta.annotation.Resource;
+import jakarta.persistence.Column;
 import jakarta.persistence.criteria.Predicate;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -62,5 +64,13 @@ public class SpStakingService {
         //List<SPStaking> stakingListBySpecification = actorPage.getContent();
 
         return actorPage;
+    }
+
+    /**
+     * 更新Ustake表的claimed字段
+     */
+    void updateUnStakeInfoByClaimIndexList(List<String> claimIndexList){
+
+        spStakingRepository.updateSPStakingByClaimIndexList(claimIndexList);
     }
 }

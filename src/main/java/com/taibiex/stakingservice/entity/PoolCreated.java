@@ -13,7 +13,9 @@ import lombok.NoArgsConstructor;
         @Index(name = "token0_idx", columnList = "token0"),
         @Index(name = "token1_idx", columnList = "token1"),
         @Index(name = "pool_idx", columnList = "pool"),
-        @Index(name = "tx_hash_idx", columnList = "tx_hash", unique = true)
+        @Index(name = "tx_hash_idx", columnList = "tx_hash", unique = true),
+        @Index(name = "create_time_idx", columnList = "create_time"),
+        @Index(name = "last_update_time_idx", columnList = "last_update_time")
 })
 @Data
 @AllArgsConstructor
