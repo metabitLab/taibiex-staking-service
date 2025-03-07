@@ -3,6 +3,7 @@ package com.taibiex.stakingservice.common.chain.contract.task.listener;
 import com.taibiex.stakingservice.common.chain.contract.listener.impl.BlockEventListener;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -27,12 +28,15 @@ public class TasksListener {
     //springboot scheduled 解决多定时任务不执行的问题，多线程配置的几种方式 https://blog.csdn.net/liaoyi9203/article/details/109842925
 
     @Autowired
+    @Qualifier("blockEventListenerDelay0") //需要对应ListenerConfig中的Bean的名称
     BlockEventListener blockEventListener;
 
     @Autowired
+    @Qualifier("blockEventDelayListener3")//需要对应ListenerConfig中的Bean的名称
     BlockEventListener blockEventDelayListener3;
 
     @Autowired
+    @Qualifier("blockEventDelayListener100")//需要对应ListenerConfig中的Bean的名称
     BlockEventListener blockEventDelayListener15;
 
     @Async

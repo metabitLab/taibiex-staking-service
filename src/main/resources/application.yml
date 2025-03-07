@@ -34,7 +34,7 @@ logging:
           descriptor:
             sql:
               BasicBinder: trace  # 将日志级别设置为 TRACE，以打印参数绑定的详细信息
-    root: info
+    root: info # debug
 
 # springdoc-openapi项目配置
 springdoc:
