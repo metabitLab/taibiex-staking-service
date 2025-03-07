@@ -149,6 +149,15 @@ public class Web3jUtils {
         return web3j.ethGetLogs(filter).send();
     }
 
+    public EthLog filterEthLog(DefaultBlockParameter startBlock, DefaultBlockParameter endBlock, Event event, String contractAddress) throws IOException {
+
+        org.web3j.protocol.core.methods.request.EthFilter filter = new org.web3j.protocol.core.methods.request.EthFilter(startBlock, endBlock, contractAddress);
+        String topic = EventEncoder.encode(event);
+        logger.info(" ==========> filterEthLog topic {}", topic);
+        filter.addSingleTopic(topic);
+        return web3j.ethGetLogs(filter).send();
+    }
+
     /**
      * Retrieve Ethereum event logs
      *
@@ -281,7 +290,7 @@ public class Web3jUtils {
 
                 //BigInteger transactionGasLimit = getTransactionGasLimit(transaction);
 
-                BigInteger ethGasPrice = getGasPrice().multiply(new BigInteger("50")).divide(new BigInteger("10"));
+                BigInteger ethGasPrice = getGasPrice().multiply(new BigInteger("11")).divide(new BigInteger("10"));
 
                 RawTransaction rawTransaction = RawTransaction.createTransaction( nonce, ethGasPrice, DefaultGasProvider.GAS_LIMIT, contractAddress, encodedFunction);
                 //RawTransaction rawTransaction = RawTransaction.createTransaction( nonce, ethGasPrice, transactionGasLimit.multiply(new BigInteger("2")), contractAddress, encodedFunction);
@@ -488,47 +497,6 @@ public class Web3jUtils {
 
     }
 
-    public String setStakingReward(String epoch, String tokenId, String rewardAmount, String epochActiveAmount) throws IOException, ExecutionException, InterruptedException {
-
-        List<Type> inputParameters = new ArrayList<>();
-        inputParameters.add(new Uint256(Long.parseLong(tokenId)));
-        inputParameters.add(new Uint16(Long.parseLong(epoch)));
-        inputParameters.add(new Uint256(new BigInteger(rewardAmount)));
-        inputParameters.add(new Uint256(new BigInteger(epochActiveAmount)));
-        List<TypeReference<?>> outputParameters = new ArrayList<>();
-        Function function = new Function("setEpochReward", inputParameters, outputParameters);
-        ContractsConfig.ContractInfo eventReferralRewardCI = contractsConfig.getContractInfo("NodePoolRouter");
-        return sendTransaction(function, eventReferralRewardCI.getAddress());
-    }
-
-
-    public String getUserEpochInfo(String epoch, String stakingProvider) throws IOException, ExecutionException, InterruptedException {
-
-        List<Type> inputParameters = new ArrayList<>();
-        inputParameters.add(new Address(stakingProvider));
-        inputParameters.add(new Uint16(Long.parseLong(epoch)));
-        List<TypeReference<?>> outputParameters = new ArrayList<>();
-        outputParameters.add(new TypeReference<Uint256>() {});
-        outputParameters.add(new TypeReference<Uint256>() {});
-        outputParameters.add(new TypeReference<Uint256>() {});
-        outputParameters.add(new TypeReference<Uint256>() {});
-        outputParameters.add(new TypeReference<Bool>() {});
-        Function function = new Function("getUserEpochInfo", inputParameters, outputParameters);
-        ContractsConfig.ContractInfo eventReferralRewardCI = contractsConfig.getContractInfo("NuLinkStakingPool");
-        try {
-            List<Type> returnList = callContractFunction(function, eventReferralRewardCI.getAddress());
-            return returnList.get(0).getValue().toString();
-        } catch (ExecutionException e) {
-            // throw new RuntimeException(e);
-            log.error("call getUserEpochInfo ExecutionException:", e);
-        } catch (InterruptedException e) {
-            //throw new RuntimeException(e);
-            log.error("call getUserEpochInfo InterruptedException:", e);
-        }
-        return null;
-    }
-
-
     /**
      *   function positions(uint256 tokenId)
      *         external
@@ -670,5 +638,16 @@ public class Web3jUtils {
             log.error("call getUniswapV3PoolSlot0 InterruptedException: ", e);
         }
         return null;
+    }
+
+    public String sendBatchTransferRewardTransfer(List<Address> users, String rewardToken, List<Uint256> amounts) throws IOException, ExecutionException, InterruptedException {
+        List<Type> inputParameters = new ArrayList<>();
+        inputParameters.add(new DynamicArray(users));
+        inputParameters.add(new Address(rewardToken));
+        inputParameters.add(new DynamicArray(amounts));
+        List<TypeReference<?>> outputParameters = new ArrayList<>();
+        Function function = new Function("batchTransferReward", inputParameters, outputParameters);
+        ContractsConfig.ContractInfo batchTransferReward = contractsConfig.getContractInfo("BatchTransferReward");
+        return sendTransaction(function, batchTransferReward.getAddress());
     }
 }

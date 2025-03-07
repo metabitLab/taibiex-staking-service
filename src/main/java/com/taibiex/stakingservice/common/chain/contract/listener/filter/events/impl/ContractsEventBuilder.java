@@ -34,10 +34,27 @@ public class ContractsEventBuilder implements EventBuilder<ContractsEventEnum> {
                 return getDecreaseLiquidityEvent();
             case DECREASE_LIQUIDITY_DESC:
                 return getDecreaseLiquidityEventDesc();
+            case STAKING:
+                return getStakingEvent();
+            case STAKING_DESC:
+                return getStakingEventDesc();
+            case UN_STAKING:
+                return getUnStakingEvent();
+            case UN_STAKING_DESC:
+                return getUnStakingEventDesc();
+            case CLAIM:
+                return getClaimEvent();
+            case CLAIM_DESC:
+                return getClaimEventDesc();
+            case CLAIM_INDEX:
+                return getClaimIndexEvent();
+            case CLAIM_INDEX_DESC:
+                return getClaimIndexEventDesc();
             case POOL_CREATED:
                 return getPoolCreatedEvent();
             case POOL_CREATED_DESC:
                 return getPoolCreatedEventDesc();
+
             default:
                 return null;
         }
@@ -247,6 +264,110 @@ public class ContractsEventBuilder implements EventBuilder<ContractsEventEnum> {
                         new TypeReference<Int24>(false) { //tickSpacing
                         },
                         new TypeReference<Address>(false) { //pool
+                        }
+                ));
+        return event;
+    }
+
+    private Event getStakingEvent() {
+        //event Stake(address indexed user, uint256 amount0)
+        Event event = new Event("Stake",
+                Arrays.<TypeReference<?>>asList(
+                        new TypeReference<Address>(true) {//address
+                        },
+                        new TypeReference<Uint256>(false) { //amount
+                        }
+                ));
+        return event;
+    }
+
+    private Event getStakingEventDesc() {
+        //event Stake(address indexed user, uint256 amount0)
+        Event event = new Event("Stake",
+                Arrays.<TypeReference<?>>asList(
+                        new TypeReference<Uint256>(false) { //amount
+                        }
+                ));
+        return event;
+    }
+
+    private Event getUnStakingEvent() {
+        //event Unstake(address indexed user, uint256 amount0, uint256 unlockBlock)
+        Event event = new Event("Unstake",
+                Arrays.<TypeReference<?>>asList(
+                        new TypeReference<Address>(true) {//address
+                        },
+                        new TypeReference<Uint256>(false) { //index
+                        },
+                        new TypeReference<Uint256>(false) { //amount
+                        },
+                        new TypeReference<Uint256>(false) { //unlockBlock
+                        }
+                ));
+        return event;
+    }
+
+    private Event getUnStakingEventDesc() {
+        //event Unstake(address indexed user, uint256 amount0, uint256 unlockBlock)
+        Event event = new Event("Unstake",
+                Arrays.<TypeReference<?>>asList(
+                        new TypeReference<Uint256>(false) { //index
+                        },
+                        new TypeReference<Uint256>(false) { //amount
+                        },
+                        new TypeReference<Uint256>(false) { //unlockBlock
+                        }
+                ));
+        return event;
+    }
+
+    private Event getClaimEvent() {
+        //event Claim(address indexed user, uint256[] indexList, uint256 amount);
+        Event event = new Event("Claim",
+                Arrays.<TypeReference<?>>asList(
+                        new TypeReference<Address>(true) {//address
+                        },
+                        new TypeReference<DynamicArray<Uint256>>(false) { //indexList
+                        },
+                        new TypeReference<Uint256>(false) { //amount
+                        }
+                ));
+        return event;
+    }
+
+    private Event getClaimEventDesc() {
+        //event Claim(address indexed user, uint256 amount0)
+        Event event = new Event("Claim",
+                Arrays.<TypeReference<?>>asList(
+                        new TypeReference<DynamicArray<Uint256>>(false) { //indexList
+                        },
+                        new TypeReference<Uint256>(false) { //amount
+                        }
+                ));
+        return event;
+    }
+
+    private Event getClaimIndexEvent() {
+        //event ClaimIndex(address indexed user, uint256 index, uint256 amount0)
+        Event event = new Event("ClaimIndex",
+                Arrays.<TypeReference<?>>asList(
+                        new TypeReference<Address>(true) {//address
+                        },
+                        new TypeReference<Uint256>(false) { //index
+                        },
+                        new TypeReference<Uint256>(false) { //amount
+                        }
+                ));
+        return event;
+    }
+
+    private Event getClaimIndexEventDesc() {
+        //event ClaimIndex(address indexed user, uint256 index, uint256 amount0)
+        Event event = new Event("ClaimIndex",
+                Arrays.<TypeReference<?>>asList(
+                        new TypeReference<Uint256>(false) { //index
+                        },
+                        new TypeReference<Uint256>(false) { //amount
                         }
                 ));
         return event;

@@ -31,6 +31,16 @@ public class RedisServiceImpl implements RedisService {
     }
 
     @Override
+    public Boolean setNx(String key, String value) {
+        return redisTemplate.opsForValue().setIfAbsent(key, value);
+    }
+
+    @Override
+    public Boolean setNx(String key, String value, long time, TimeUnit unit) {
+        return redisTemplate.opsForValue().setIfAbsent(key, value, time, unit);
+    }
+
+    @Override
     public Object get(String key) {
         return redisTemplate.opsForValue().get(key);
     }

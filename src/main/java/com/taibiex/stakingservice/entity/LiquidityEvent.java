@@ -9,22 +9,28 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+/**
+ * 增加(Mint,Increase)或减少(Burn,Decrease)流动性记录
+ */
 @Entity
-@Table(name = "increase_liquidity", indexes = {
+@Table(name = "liquidity", indexes = {
         @Index(name = "sender_idx", columnList = "sender"),
         @Index(name = "owner_idx", columnList = "owner"),
         @Index(name = "token_id_idx", columnList = "token_id"),
         @Index(name = "pool_idx", columnList = "pool"),
-        @Index(name = "tx_hash_idx", columnList = "tx_hash", unique = true),
-
+        @Index(name = "tick_lower_idx", columnList = "tick_lower"),
+        @Index(name = "tick_upper_idx", columnList = "tick_upper"),
+        @Index(name = "type_idx", columnList = "type"),
+        @Index(name = "tx_hash_type_idx", columnList = "tx_hash,type", unique = true),
+        @Index(name = "create_time_idx", columnList = "create_time"),
+        @Index(name = "last_update_time_idx", columnList = "last_update_time")
 })
 
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class MintAndIncreaseLiquidity extends BaseEntity{
+public class LiquidityEvent extends BaseEntity{
 
-    //Mint
     @Column(name = "tx_hash", nullable = false, length = 100)
     private String txHash;
 
@@ -74,7 +80,7 @@ public class MintAndIncreaseLiquidity extends BaseEntity{
 
     //IncreaseLiquidity
     //理论上存在这个的原因: 在 Uniswap V3 中，添加流动性确实需要通过 NonfungiblePositionManager 合约，而不能直接通过 Pool 合约的 mint 方法
-    @Comment("添加流动性生成的NFT,有可能为空字符串:通过Pool添加的流动性时,有可能只有Mint事件")
+    @Comment("添加流动性时生成的NFT,有可能为空字符串:通过Pool添加的流动性时,有可能只有Mint事件")
     @Column(name = "token_id", nullable = false, length = 100)
     private String tokenId;
 
@@ -82,5 +88,8 @@ public class MintAndIncreaseLiquidity extends BaseEntity{
     @Column(name = "pool", nullable = false, length = 100)
     private String pool;
 
+    @Comment("流动性类型: 1: 添加流动性 0.移除流动性")
+    @Column(name = "`type`", nullable = false)
+    private  Short type;
 }
 

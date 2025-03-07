@@ -49,8 +49,10 @@ import java.util.List;
         @Index(name = "token0_idx", columnList = "token0"),
         @Index(name = "token1_idx", columnList = "token1"),
         @Index(name = "pool_idx", columnList = "pool", unique = true),
-        @Index(name = "pool_pair_idx", columnList = "token0, token1, fee", unique = true)
+        @Index(name = "pool_pair_idx", columnList = "token0, token1, fee", unique = true),
         //token0, token1, fee <==> pool (address)
+        @Index(name = "create_time_idx", columnList = "create_time"),
+        @Index(name = "last_update_time_idx", columnList = "last_update_time")
 })
 
 //@Data and add the @JsonIgnore for @OneToMany //https://blog.csdn.net/qq_44766883/article/details/107126456 and https://blog.csdn.net/qq_41621362/article/details/103997237 for fix: StackOverflowError

@@ -1,5 +1,5 @@
 server:
-  port: 8092
+  port: 8804
 spring:
   data:
     redis:
@@ -7,20 +7,19 @@ spring:
       host: localhost
       database: 2
       connect-timeout: 5000
-  #    password: Nulink@2023Redis
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
     type: com.zaxxer.hikari.HikariDataSource
-    #url: jdbc:mysql://127.0.0.1:3306/nulink_dashboard?useUnicode=true&characterEncoding=utf-8&zeroDateTimeBehavior=convertToNull&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
     url: jdbc:mysql://127.0.0.1:3306/taibiex_staking?useUnicode=true&characterEncoding=utf-8&zeroDateTimeBehavior=convertToNull&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
     username: root
     password: 123456
+    #password: tabi@2024
     hikari:
       minimum-idle: 5
       idle-timeout: 600000
       maximum-pool-size: 100
       auto-commit: true
-      pool-name: XCarHikariCP
+      pool-name: TaibiexStakingHikariCP
       max-lifetime: 3600000
       connection-timeout: 60000
       connection-test-query: SELECT 1
@@ -39,6 +38,12 @@ contracts:
     - name: "NonfungiblePositionManager"
       address: "0xd8442B36A021Ec592638C8B3529E492c5f6799B9"
       enabled: true
+    - name: "StakingPool" # 单币质押
+      address: "0xB9f2218e03cF0753e2FEE2A1B6B5718a12b42E4b"
+      enabled: true
+    - name: "BatchTransferReward" #lp批量转账(添加流动性 发奖励，与StakingPool没有关系)
+      address: "0x419a39291D104DE2817555a1083464DdAa7f2263"
+      enabled: true
 
 web3j:
   client-address: https://rpc.testnetv2.tabichain.com
@@ -51,10 +56,10 @@ knife4j:
     language: en
 
 tabi:
-  password: guokaipeng123
+  password: qetgkp132
   chainId: 9788
 
 epoch:
   startTimestamp: 1732521995000 # epoch 周期起始时间(块号对应的时间戳：我们这里用毫秒级时间戳)
-  unit: 86400000 # 一个epoch时长： 1天，单位毫秒
+  unit: 3600000 # 一个epoch时长： 1小时，单位毫秒
 

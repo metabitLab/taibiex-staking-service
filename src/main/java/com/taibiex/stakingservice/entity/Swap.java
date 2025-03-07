@@ -14,7 +14,9 @@ import java.math.BigInteger;
 @Table(name = "swap", indexes = {
         @Index(name = "sender_idx", columnList = "sender"),
         @Index(name = "recipient_idx", columnList = "recipient"),
-        @Index(name = "tx_hash_idx", columnList = "tx_hash", unique = true)
+        @Index(name = "tx_hash_idx", columnList = "tx_hash", unique = true),
+        @Index(name = "create_time_idx", columnList = "create_time"),
+        @Index(name = "last_update_time_idx", columnList = "last_update_time")
 })
 @Data
 @AllArgsConstructor

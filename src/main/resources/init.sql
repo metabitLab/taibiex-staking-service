@@ -14,3 +14,7 @@ INSERT INTO taibiex_staking.reward_pools_config (create_time,last_update_time,fe
     ('2024-12-04 23:22:42','2024-12-04 23:22:42','100','0x497244841295B8941086D2271bB3a5bB1e8277B4','0x2ccad515c13df2178f6960304ae0dbe0428e8d28','0xcdc10593a66185aaa206665c5083ac51ad935f91');
 INSERT INTO taibiex_staking.reward_pools_tick_range_config (create_time,last_update_time,pool,reward_ratio,tick_lower,tick_upper,reward_pool_id) VALUES
     ('2024-12-05 08:31:30','2024-12-05 08:31:30','0x497244841295B8941086D2271bB3a5bB1e8277B4',1000,'-296','304',1);
+
+INSERT INTO taibiex_staking.epoch_reward_config
+(id, create_time, last_update_time, epoch, main_net, reward_amount, token_address, token_symbol)
+VALUES(1, '2024-12-13 16:19:24', '2024-12-13 16:19:24', 1, 0, '100000000000000000000', '0x61B0C158ee2DDF6f430325f56dDffFbEe1b88B00', 'JAX');

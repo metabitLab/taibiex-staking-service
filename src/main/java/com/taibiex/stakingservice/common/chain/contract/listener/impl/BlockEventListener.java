@@ -1,9 +1,7 @@
 package com.taibiex.stakingservice.common.chain.contract.listener.impl;
 
 import com.taibiex.stakingservice.common.chain.contract.listener.filter.events.ContractsEventEnum;
-import com.taibiex.stakingservice.common.chain.contract.listener.filter.events.consumer.MintEventHandler;
-import com.taibiex.stakingservice.common.chain.contract.listener.filter.events.consumer.PoolCreatedEventHandler;
-import com.taibiex.stakingservice.common.chain.contract.listener.filter.events.consumer.SwapEventHandler;
+import com.taibiex.stakingservice.common.chain.contract.listener.filter.events.consumer.*;
 import com.taibiex.stakingservice.common.chain.contract.listener.filter.events.impl.ContractsEventBuilder;
 import com.taibiex.stakingservice.common.chain.contract.utils.Web3jUtils;
 import com.taibiex.stakingservice.common.constant.PoolMapSingleton;
@@ -122,15 +120,31 @@ public class BlockEventListener {
         topicAndContractAddr2EventMap.clear();
         topicAndContractAddr2CallBackMap.clear();
 
-//        ContractsConfig.ContractInfo v3CoreFactoryCI = contractsConfig.getContractInfo("v3CoreFactoryAddress");
-//
-//        if (isTaskEnable(enablesTaskNames, disableTaskNames, v3CoreFactoryCI.getName()) && v3CoreFactoryCI.getEnabled()) {
-//
-//            Event claimEvent = new ContractsEventBuilder().build(ContractsEventEnum.POOL_CREATED);
-//            String topicEventClaim = EventEncoder.encode(claimEvent).toLowerCase();
-//            topicAndContractAddr2EventMap.put(topicEventClaim + "_" + v3CoreFactoryCI.getAddress(), claimEvent);
-//            topicAndContractAddr2CallBackMap.put(topicEventClaim + "_" + v3CoreFactoryCI.getAddress(), PoolCreatedEventHandler.class.getMethod("descPoolCreatedEvent", Log.class));
-//        }
+        ContractsConfig.ContractInfo stakingPool = contractsConfig.getContractInfo("StakingPool");
+
+        if (isTaskEnable(enablesTaskNames, disableTaskNames, stakingPool.getName()) && stakingPool.getEnabled()) {
+
+            Event stakingEvent = new ContractsEventBuilder().build(ContractsEventEnum.STAKING);
+            String topicEventStaking = EventEncoder.encode(stakingEvent).toLowerCase();
+            topicAndContractAddr2EventMap.put(topicEventStaking + "_" + stakingPool.getAddress(), stakingEvent);
+            topicAndContractAddr2CallBackMap.put(topicEventStaking + "_" + stakingPool.getAddress(), StakingEventHandler.class.getMethod("descStakingEvent", Log.class));
+
+            Event unStakingEvent = new ContractsEventBuilder().build(ContractsEventEnum.UN_STAKING);
+            String topicEventUnStaking = EventEncoder.encode(unStakingEvent).toLowerCase();
+            topicAndContractAddr2EventMap.put(topicEventUnStaking + "_" + stakingPool.getAddress(), unStakingEvent);
+            topicAndContractAddr2CallBackMap.put(topicEventUnStaking + "_" + stakingPool.getAddress(), StakingEventHandler.class.getMethod("descUnStakingEvent", Log.class));
+
+            Event claimEvent = new ContractsEventBuilder().build(ContractsEventEnum.CLAIM);
+            String topicEventClaim = EventEncoder.encode(claimEvent).toLowerCase();
+            topicAndContractAddr2EventMap.put(topicEventClaim + "_" + stakingPool.getAddress(), claimEvent);
+            topicAndContractAddr2CallBackMap.put(topicEventClaim + "_" + stakingPool.getAddress(), ClaimEventHandler.class.getMethod("descClaimEvent", Log.class));
+
+            Event claimIndexEvent = new ContractsEventBuilder().build(ContractsEventEnum.CLAIM_INDEX);
+            String topicEventClaimIndex = EventEncoder.encode(claimIndexEvent).toLowerCase();
+            topicAndContractAddr2EventMap.put(topicEventClaimIndex + "_" + stakingPool.getAddress(), claimIndexEvent);
+            topicAndContractAddr2CallBackMap.put(topicEventClaimIndex + "_" + stakingPool.getAddress(), ClaimEventHandler.class.getMethod("descClaimIndexEvent", Log.class));
+
+        }
 
 
         Map<String, RewardPool> sharedMap = PoolMapSingleton.getSharedMap();

@@ -36,6 +36,10 @@ public interface RedisService {
      */
     void set(String key, Object value);
 
+    Boolean setNx(String key, String value);
+
+    Boolean setNx(String key, String value, long time, TimeUnit unit);
+
 
     /**
      * 获取属性

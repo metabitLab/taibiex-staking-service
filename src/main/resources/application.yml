@@ -2,7 +2,7 @@ spring:
   profiles:
     active: dev
   mvc:
-    pathmatch:
+    path match:
       matching-strategy: ant_path_matcher
   application:
     name: taibiex-staking-service
@@ -34,7 +34,12 @@ logging:
           descriptor:
             sql:
               BasicBinder: trace  # 将日志级别设置为 TRACE，以打印参数绑定的详细信息
+        orm:
+          jdbc:
+            bind: trace # https://blog.csdn.net/zhaolinfenggg/article/details/135706459
+
     root: info # debug
+
 
 # springdoc-openapi项目配置
 springdoc:
@@ -48,3 +53,6 @@ springdoc:
     - group: 'default'
       paths-to-match: '/**'
       packages-to-scan: com.taibiex.stakingservice.controller
+
+app:
+  total-reward-amount: 100000000000000000000

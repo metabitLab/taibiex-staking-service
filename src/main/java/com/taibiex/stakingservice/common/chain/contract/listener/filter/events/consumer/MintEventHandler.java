@@ -5,20 +5,19 @@ import com.taibiex.stakingservice.common.chain.contract.listener.filter.events.i
 import com.taibiex.stakingservice.common.chain.contract.utils.EthLogsParser;
 import com.taibiex.stakingservice.common.chain.contract.utils.Web3jUtils;
 import com.taibiex.stakingservice.config.ContractsConfig;
-import com.taibiex.stakingservice.entity.BurnAndDecreaseLiquidity;
-import com.taibiex.stakingservice.entity.MintAndIncreaseLiquidity;
-import com.taibiex.stakingservice.service.BurnAndDecreaseLiquidityService;
-import com.taibiex.stakingservice.service.MintAndIncreaseLiquidityService;
+import com.taibiex.stakingservice.entity.LiquidityEvent;
+import com.taibiex.stakingservice.entity.RewardPool;
+import com.taibiex.stakingservice.service.LiquidityEventService;
+
+import com.taibiex.stakingservice.service.RewardPoolService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 import org.web3j.abi.FunctionReturnDecoder;
 import org.web3j.abi.datatypes.Event;
 import org.web3j.abi.datatypes.Type;
-import org.web3j.crypto.Keys;
 import org.web3j.protocol.core.methods.response.Log;
 import org.web3j.protocol.core.methods.response.Transaction;
 
@@ -32,18 +31,17 @@ import java.util.Optional;
 @Component
 public class MintEventHandler {
 
-    private static MintAndIncreaseLiquidityService mintAndIncreaseLiquidityService;
-
-    private static BurnAndDecreaseLiquidityService burnAndDecreaseLiquidityService;
+    private static LiquidityEventService liquidityEventService;
     private static Web3jUtils web3jUtils;
 
+    private static RewardPoolService rewardPoolService;
 
     static ContractsConfig contractsConfig;
 
-    public MintEventHandler(MintAndIncreaseLiquidityService mintAndIncreaseLiquidityService,  BurnAndDecreaseLiquidityService burnAndDecreaseLiquidityService, Web3jUtils web3jUtils, ContractsConfig contractsConfig) {
-        MintEventHandler.mintAndIncreaseLiquidityService = mintAndIncreaseLiquidityService;
-        MintEventHandler.burnAndDecreaseLiquidityService = burnAndDecreaseLiquidityService;
+    public MintEventHandler(LiquidityEventService liquidityEventService, Web3jUtils web3jUtils, RewardPoolService rewardPoolService, ContractsConfig contractsConfig) {
+        MintEventHandler.liquidityEventService = liquidityEventService;
         MintEventHandler.web3jUtils = web3jUtils;
+        MintEventHandler.rewardPoolService = rewardPoolService;
         MintEventHandler.contractsConfig = contractsConfig;
     }
 
@@ -68,10 +66,22 @@ public class MintEventHandler {
         List<String> topics = evLog.getTopics();
 
         String poolAddress = evLog.getAddress();
+
+        BigInteger tickLower = EthLogsParser.hexToBigInteger(topics.get(2));
+        BigInteger tickUpper = EthLogsParser.hexToBigInteger(topics.get(3));
+
+        if(!rewardPoolService.poolAndTickInRewardPool(poolAddress, tickLower, tickUpper))
+        {
+            log.info("PoolMint poolAddress: {} and Tick: [{}, {}] are not in RewardPool, return and ignore", poolAddress, tickLower, tickUpper);
+            //不在奖池里的事件不处理
+            return;
+        }
+
         ContractsConfig.ContractInfo nonFungiblePositionManagerCI = contractsConfig.getContractInfo("NonfungiblePositionManager");
 
 
-        MintAndIncreaseLiquidity mintAndIncreaseLiquidity = new MintAndIncreaseLiquidity();
+        LiquidityEvent mintAndIncreaseLiquidity = new LiquidityEvent();
+
         String transactionHash = evLog.getTransactionHash();
         Timestamp eventHappenedTimeStamp = web3jUtils.getEventHappenedTimeStampByBlockHash(evLog.getBlockHash());
 
@@ -91,8 +101,8 @@ public class MintEventHandler {
 
         //注意：这里数据库存的交易hash中不能和logIndex一起存，因为情况2时这里有可能Pool和NonfungiblePositionManager添加流动性事件共同维护此记录(记录才能完全)
         mintAndIncreaseLiquidity.setTxHash(transactionHash /*+ "-" + evLog.getLogIndex(*/);
-        mintAndIncreaseLiquidity.setTickLower(EthLogsParser.hexToBigInteger(topics.get(2)).toString());
-        mintAndIncreaseLiquidity.setTickUpper(EthLogsParser.hexToBigInteger(topics.get(3)).toString());
+        mintAndIncreaseLiquidity.setTickLower(tickLower.toString());
+        mintAndIncreaseLiquidity.setTickUpper(tickUpper.toString());
         mintAndIncreaseLiquidity.setAmount(args.get(1).getValue().toString());
         mintAndIncreaseLiquidity.setAmount0(args.get(2).getValue().toString());
         mintAndIncreaseLiquidity.setAmount1(args.get(3).getValue().toString());
@@ -100,8 +110,10 @@ public class MintEventHandler {
         mintAndIncreaseLiquidity.setLastUpdateTime(eventHappenedTimeStamp);
         mintAndIncreaseLiquidity.setTokenId("");
         mintAndIncreaseLiquidity.setPool(poolAddress);
+        mintAndIncreaseLiquidity.setType((short) 1);
 
-        mintAndIncreaseLiquidityService.save(mintAndIncreaseLiquidity);
+
+        liquidityEventService.save(mintAndIncreaseLiquidity);
 
     }
 
@@ -115,8 +127,18 @@ public class MintEventHandler {
 
         String poolAddress = evLog.getAddress();
 
+        BigInteger tickLower = EthLogsParser.hexToBigInteger(topics.get(2));
+        BigInteger tickUpper = EthLogsParser.hexToBigInteger(topics.get(3));
+
+        if(!rewardPoolService.poolAndTickInRewardPool(poolAddress, tickLower, tickUpper))
+        {
+            log.info("PoolBurn poolAddress: {} and Tick: [{}, {}] are not in RewardPool, return and ignore", poolAddress, tickLower, tickUpper);
+            //不在奖池里的事件不处理
+            return;
+        }
+
         if (!CollectionUtils.isEmpty(args)) {
-            BurnAndDecreaseLiquidity burnAndDecreaseLiquidity = new BurnAndDecreaseLiquidity();
+            LiquidityEvent burnAndDecreaseLiquidityEvent = new LiquidityEvent();
             String transactionHash = evLog.getTransactionHash();
             Timestamp eventHappenedTimeStamp = web3jUtils.getEventHappenedTimeStampByBlockHash(evLog.getBlockHash());
             Optional<Transaction> transaction = web3jUtils.getWeb3j().ethGetTransactionByHash(transactionHash).send().getTransaction();
@@ -127,53 +149,54 @@ public class MintEventHandler {
             String owner = EthLogsParser.hexToAddress(topics.get(1));
             if(StringUtils.equalsIgnoreCase(owner, nonFungiblePositionManagerCI.getAddress()))
             {
-                transaction.ifPresent(ethTransaction -> burnAndDecreaseLiquidity.setOwner(ethTransaction.getFrom()));
+                transaction.ifPresent(ethTransaction -> burnAndDecreaseLiquidityEvent.setOwner(ethTransaction.getFrom()));
             }
             else {
-                burnAndDecreaseLiquidity.setOwner(owner);
+                burnAndDecreaseLiquidityEvent.setOwner(owner);
             }
 
-            transaction.ifPresent(ethTransaction -> burnAndDecreaseLiquidity.setSender(ethTransaction.getFrom()));
+            transaction.ifPresent(ethTransaction -> burnAndDecreaseLiquidityEvent.setSender(ethTransaction.getFrom()));
 
 
             //注意：这里数据库存的交易hash中不能和logIndex一起存，因为情况2时这里有可能Pool和NonfungiblePositionManager添加流动性事件共同维护此记录(记录才能完全)
-            burnAndDecreaseLiquidity.setTxHash(transactionHash/* + "-" + evLog.getLogIndex()*/);
-            burnAndDecreaseLiquidity.setTickLower(EthLogsParser.hexToBigInteger(topics.get(2)).toString());
-            burnAndDecreaseLiquidity.setTickUpper(EthLogsParser.hexToBigInteger(topics.get(3)).toString());
+            burnAndDecreaseLiquidityEvent.setTxHash(transactionHash/* + "-" + evLog.getLogIndex()*/);
+            burnAndDecreaseLiquidityEvent.setTickLower(tickLower.toString());
+            burnAndDecreaseLiquidityEvent.setTickUpper(tickUpper.toString());
 
             String liquidity = args.get(0).getValue().toString();
             if(!StringUtils.equalsIgnoreCase(liquidity, "0"))
             {
-                burnAndDecreaseLiquidity.setAmount(liquidity);
+                burnAndDecreaseLiquidityEvent.setAmount(liquidity);
             }
             else{
-                burnAndDecreaseLiquidity.setAmount("");
+                burnAndDecreaseLiquidityEvent.setAmount("");
             }
 
             String amount0 = args.get(1).getValue().toString();
             if(!StringUtils.equalsIgnoreCase(liquidity, "0"))
             {
-                burnAndDecreaseLiquidity.setAmount0(amount0);
+                burnAndDecreaseLiquidityEvent.setAmount0(amount0);
             }
             else{
-                burnAndDecreaseLiquidity.setAmount0("");
+                burnAndDecreaseLiquidityEvent.setAmount0("");
             }
 
             String amount1 = args.get(2).getValue().toString();
             if(!StringUtils.equalsIgnoreCase(liquidity, "0"))
             {
-                burnAndDecreaseLiquidity.setAmount1(amount1);
+                burnAndDecreaseLiquidityEvent.setAmount1(amount1);
             }
             else{
-                burnAndDecreaseLiquidity.setAmount1("");
+                burnAndDecreaseLiquidityEvent.setAmount1("");
             }
 
-            burnAndDecreaseLiquidity.setCreateTime(eventHappenedTimeStamp);
-            burnAndDecreaseLiquidity.setLastUpdateTime(eventHappenedTimeStamp);
-            burnAndDecreaseLiquidity.setTokenId("");
-            burnAndDecreaseLiquidity.setPool(poolAddress);
+            burnAndDecreaseLiquidityEvent.setCreateTime(eventHappenedTimeStamp);
+            burnAndDecreaseLiquidityEvent.setLastUpdateTime(eventHappenedTimeStamp);
+            burnAndDecreaseLiquidityEvent.setTokenId("");
+            burnAndDecreaseLiquidityEvent.setPool(poolAddress);
+            burnAndDecreaseLiquidityEvent.setType((short) 0);
 
-            burnAndDecreaseLiquidityService.save(burnAndDecreaseLiquidity);
+            liquidityEventService.save(burnAndDecreaseLiquidityEvent);
         }
     }
 
@@ -189,7 +212,7 @@ public class MintEventHandler {
 
 
         if (!CollectionUtils.isEmpty(args)) {
-            MintAndIncreaseLiquidity mintAndIncreaseLiquidity = new MintAndIncreaseLiquidity();
+            LiquidityEvent mintAndIncreaseLiquidity = new LiquidityEvent();
             String transactionHash = evLog.getTransactionHash();
             Timestamp eventHappenedTimeStamp = web3jUtils.getEventHappenedTimeStampByBlockHash(evLog.getBlockHash());
 
@@ -228,6 +251,14 @@ public class MintEventHandler {
             BigInteger tickUpper = (BigInteger)poolDetails.get(6).getValue();
 
             String poolAddress = web3jUtils.getPoolAddress(token0, token1, fee);
+
+            if(!rewardPoolService.poolAndTickInRewardPool(poolAddress, tickLower, tickUpper))
+            {
+                log.info("IncreaseLiquidity poolAddress: {} and Tick: [{}, {}] are not in RewardPool, return and ignore", poolAddress, tickLower, tickUpper);
+                //不在奖池里的事件不处理
+                return;
+            }
+
             //List<Type> poolInfo2 = web3jUtils.getUniswapV3PoolSlot0(poolAddress);
             ContractsConfig.ContractInfo nonFungiblePositionManagerCI = contractsConfig.getContractInfo("NonfungiblePositionManager");
 
@@ -249,6 +280,7 @@ public class MintEventHandler {
             mintAndIncreaseLiquidity.setTxHash(transactionHash /*+ "-" + evLog.getLogIndex()*/);
             mintAndIncreaseLiquidity.setTokenId(tokenId);
             mintAndIncreaseLiquidity.setPool(poolAddress);
+            mintAndIncreaseLiquidity.setType((short) 1);
 
             /**
              * 情况1： 一种是常规调用方法，用户通过界面调用NonfungiblePositionManager合约添加或移除流动性，需要监听交易中的两个事件:
@@ -271,7 +303,7 @@ public class MintEventHandler {
             mintAndIncreaseLiquidity.setAmount1(args.get(2).getValue().toString());
             mintAndIncreaseLiquidity.setCreateTime(eventHappenedTimeStamp);
             mintAndIncreaseLiquidity.setLastUpdateTime(eventHappenedTimeStamp);
-            mintAndIncreaseLiquidityService.save(mintAndIncreaseLiquidity);
+            liquidityEventService.save(mintAndIncreaseLiquidity);
         }
     }
 
@@ -282,7 +314,7 @@ public class MintEventHandler {
         List<String> topics = evLog.getTopics();
 
         if (!CollectionUtils.isEmpty(args)) {
-            BurnAndDecreaseLiquidity burnAndDecreaseLiquidity = new BurnAndDecreaseLiquidity();
+            LiquidityEvent burnAndDecreaseLiquidityEvent = new LiquidityEvent();
             String transactionHash = evLog.getTransactionHash();
             Timestamp eventHappenedTimeStamp = web3jUtils.getEventHappenedTimeStampByBlockHash(evLog.getBlockHash());
 
@@ -321,27 +353,38 @@ public class MintEventHandler {
             BigInteger tickUpper = (BigInteger)poolDetails.get(6).getValue();
 
             String poolAddress = web3jUtils.getPoolAddress(token0, token1, fee);
+
+            if(!rewardPoolService.poolAndTickInRewardPool(poolAddress, tickLower, tickUpper))
+            {
+                log.info("DecreaseLiquidity poolAddress: {} and Tick: [{}, {}] are not in RewardPool, return and ignore", poolAddress, tickLower, tickUpper);
+                //不在奖池里的事件不处理
+                return;
+            }
+
             //List<Type> poolInfo2 = web3jUtils.getUniswapV3PoolSlot0(poolAddress);
             ContractsConfig.ContractInfo nonFungiblePositionManagerCI = contractsConfig.getContractInfo("NonfungiblePositionManager");
 
 
             String owner = web3jUtils.getNftOwnerOf(nonFungiblePositionManagerCI.getAddress(), tokenId);
-            burnAndDecreaseLiquidity.setOwner(owner);
+            burnAndDecreaseLiquidityEvent.setOwner(owner);
             Optional<Transaction> transaction = web3jUtils.getWeb3j().ethGetTransactionByHash(transactionHash).send().getTransaction();
             transaction.ifPresentOrElse(
-                    ethTransaction -> {burnAndDecreaseLiquidity.setSender(ethTransaction.getFrom()); burnAndDecreaseLiquidity.setOwner(ethTransaction.getFrom());},
-                    () -> {burnAndDecreaseLiquidity.setSender(owner); burnAndDecreaseLiquidity.setOwner(owner); });
+                    ethTransaction -> {
+                        burnAndDecreaseLiquidityEvent.setSender(ethTransaction.getFrom()); burnAndDecreaseLiquidityEvent.setOwner(ethTransaction.getFrom());},
+                    () -> {
+                        burnAndDecreaseLiquidityEvent.setSender(owner); burnAndDecreaseLiquidityEvent.setOwner(owner); });
 
-            if(StringUtils.equalsIgnoreCase(burnAndDecreaseLiquidity.getSender(), nonFungiblePositionManagerCI.getAddress()))
+            if(StringUtils.equalsIgnoreCase(burnAndDecreaseLiquidityEvent.getSender(), nonFungiblePositionManagerCI.getAddress()))
             {
-                burnAndDecreaseLiquidity.setSender(owner);
-                burnAndDecreaseLiquidity.setOwner(owner);
+                burnAndDecreaseLiquidityEvent.setSender(owner);
+                burnAndDecreaseLiquidityEvent.setOwner(owner);
             }
 
             //注意：这里数据库存的交易hash中不能和logIndex一起存，因为情况2时这里有可能Pool和NonfungiblePositionManager添加流动性事件共同维护此记录(记录才能完全)
-            burnAndDecreaseLiquidity.setTxHash(transactionHash /*+ "-" + evLog.getLogIndex()*/);
-            burnAndDecreaseLiquidity.setTokenId(tokenId);
-            burnAndDecreaseLiquidity.setPool(poolAddress);
+            burnAndDecreaseLiquidityEvent.setTxHash(transactionHash /*+ "-" + evLog.getLogIndex()*/);
+            burnAndDecreaseLiquidityEvent.setTokenId(tokenId);
+            burnAndDecreaseLiquidityEvent.setPool(poolAddress);
+            burnAndDecreaseLiquidityEvent.setType((short) 0);
 
             /**
              * 情况1： 一种是常规调用方法，用户通过界面调用NonfungiblePositionManager合约添加或移除流动性，需要监听交易中的两个事件:
@@ -354,42 +397,42 @@ public class MintEventHandler {
 //IncreaseLiquidity(uint256 indexed tokenId, uint128 liquidity, uint256 amount0, uint256 amount1)
 //            mintAndIncreaseLiquidity.setOwner();
             if (tickLower != null) {
-                burnAndDecreaseLiquidity.setTickLower(tickLower.toString());
+                burnAndDecreaseLiquidityEvent.setTickLower(tickLower.toString());
             }
             if (tickUpper != null) {
-                burnAndDecreaseLiquidity.setTickUpper(tickUpper.toString());
+                burnAndDecreaseLiquidityEvent.setTickUpper(tickUpper.toString());
             }
 
             String liquidity = args.get(0).getValue().toString();
             if(!StringUtils.equalsIgnoreCase(liquidity, "0"))
             {
-                burnAndDecreaseLiquidity.setAmount(liquidity);
+                burnAndDecreaseLiquidityEvent.setAmount(liquidity);
             }
             else{
-                burnAndDecreaseLiquidity.setAmount("");
+                burnAndDecreaseLiquidityEvent.setAmount("");
             }
 
             String amount0 = args.get(1).getValue().toString();
             if(!StringUtils.equalsIgnoreCase(liquidity, "0"))
             {
-                burnAndDecreaseLiquidity.setAmount0(amount0);
+                burnAndDecreaseLiquidityEvent.setAmount0(amount0);
             }
             else{
-                burnAndDecreaseLiquidity.setAmount0("");
+                burnAndDecreaseLiquidityEvent.setAmount0("");
             }
 
             String amount1 = args.get(2).getValue().toString();
             if(!StringUtils.equalsIgnoreCase(liquidity, "0"))
             {
-                burnAndDecreaseLiquidity.setAmount1(amount1);
+                burnAndDecreaseLiquidityEvent.setAmount1(amount1);
             }
             else{
-                burnAndDecreaseLiquidity.setAmount1("");
+                burnAndDecreaseLiquidityEvent.setAmount1("");
             }
 
-            burnAndDecreaseLiquidity.setCreateTime(eventHappenedTimeStamp);
-            burnAndDecreaseLiquidity.setLastUpdateTime(eventHappenedTimeStamp);
-            burnAndDecreaseLiquidityService.save(burnAndDecreaseLiquidity);
+            burnAndDecreaseLiquidityEvent.setCreateTime(eventHappenedTimeStamp);
+            burnAndDecreaseLiquidityEvent.setLastUpdateTime(eventHappenedTimeStamp);
+            liquidityEventService.save(burnAndDecreaseLiquidityEvent);
         }
 
     }
